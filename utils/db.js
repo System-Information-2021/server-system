@@ -1,7 +1,7 @@
 const { Pool } = require('pg')
 require('dotenv').config()
 
-const connectionString = `postgresql://postgres:${process.env.PASSWORD}@localhost:5432/ShoppingClothes`
+const connectionString = process.env.DB_URI
 
 const pool = new Pool({
     connectionString,
