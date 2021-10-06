@@ -6,18 +6,17 @@ var User = function(user) {
     this.name = user.name;
     this.username = user.username;
     this.password = user.password;
-    this.createAt = new Date();
 } 
 
 // Create 
 User.save = (result,user) => {
   pool.connect((err,client,done) => {
     if(err) throw err
-    const {id, name , username , password , createAt} = user;
+    const {id, name , username , password } = user;
     const query = {
-      text : `INSERT INTO users(id ,name ,username ,password, createAt)
-      VALUES($1 ,$2, $3, $4, $5)`,
-      values : [id, name , username, password, createAt]
+      text : `INSERT INTO users(id ,name ,username ,password)
+      VALUES($1 ,$2, $3, $4)`,
+      values : [id, name , username, password]
     } 
     
     client.query(query, (err,res)=> {
