@@ -21,7 +21,7 @@ const getAllUsers = (req, res) => {
             }).status(200)
         } else {
             res.json({
-                message: 'Something went wrong !'
+                message: 'Something went wrong!'
             })
         }
     })
@@ -78,48 +78,49 @@ const createUser = async (req, res) => {
     }
 }
 
-const authentication = (req,res) => {
+const authentication = (req, res) => {
     var { username, password } = req.body;
-	if(!username || !password) {
-		return res.status(500).json({ message: 'Please fill all fields' })
-	}
+    if (!username || !password) {
+        return res.status(500).json({ message: 'Please fill all fields' })
+    }
 
-	var promise = new Promise((resolve,reject)=> {
-		User.getUserByUsername(username, async (result) => {
-			if(result === undefined) {
-				return res.status(500).json({ message: 'User does not exist' });
-			} 
-			resolve(result);
-		});
-	});
-	
-	promise.then(async(userMatch)=> {
-		const matchPassword = await bcrypt.compare(password, userMatch.password);
-	
-		if(matchPassword) {
-			var token = 
-            jwt.sign({id: userMatch.id,
-                     username : userMatch.username
-                    }, process.env.SECRET_KEY);
-			var at = new Date();
-			var message = 'Login with ' + username;
-			return res.header('auth-token', token).json({
-				message : message,
-				token : token,
-                at : at
-			})
-		} 
-		return res.json({message : 'Wrong Password'})
-	})
-	.catch((error)=>{
-		console.log(error)
-	}) 
-} 
+    var promise = new Promise((resolve, reject) => {
+        User.getUserByUsername(username, async (result) => {
+            if (result === undefined) {
+                return res.status(500).json({ message: 'User does not exist' });
+            }
+            resolve(result);
+        });
+    });
 
-const authorization = (req,res,next) => {
+    promise.then(async (userMatch) => {
+        const matchPassword = await bcrypt.compare(password, userMatch.password);
+
+        if (matchPassword) {
+            var token =
+                jwt.sign({
+                    id: userMatch.id,
+                    username: userMatch.username
+                }, process.env.SECRET_KEY);
+            var at = new Date();
+            var message = 'Login with ' + username;
+            return res.header('auth-token', token).json({
+                message: message,
+                token: token,
+                at: at
+            })
+        }
+        return res.json({ message: 'Wrong Password' })
+    })
+        .catch((error) => {
+            console.log(error)
+        })
+}
+
+const authorization = (req, res, next) => {
     const token = req.header('auth-token');
 
-    
+
     if (!token) return res.status(401).send('Access Denied');
 
     try {
