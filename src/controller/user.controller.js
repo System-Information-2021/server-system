@@ -1,5 +1,4 @@
 const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
 const User = require('../model/user.model')
 
 const ValidateEmail = (mail) => {
@@ -21,13 +20,17 @@ const ValidatePhone = (phone) => {
     }
 }
 
+
 const getAllUsers = (req, res) => {
     User.getAllUsers((data) => {
+        data.forEach(element => {
+            delete element.password
+        });
         if (data !== null) {
             res.json({
                 status: 'ok',
                 code: 200,
-                userList: data
+                data: data
             }).status(200)
         } else {
             res.json({
@@ -145,79 +148,7 @@ const createUser = async (req, res) => {
     }
 }
 
-const authentication = (req, res) => {
-    var { email, password } = req.body;
-    if (!email || !password) {
-        return res.status(500).json({ message: 'Please fill all fields' })
-    }
-
-    var promise = new Promise((resolve, reject) => {
-        User.getUserByEmail(email, async (result) => {
-            if (result === undefined) {
-                return res.status(500).json({ message: 'User does not exist' });
-            }
-            resolve(result);
-        });
-    });
-
-    promise.then(async (userMatch) => {
-        const matchPassword = await bcrypt.compare(password, userMatch.password);
-
-        if (matchPassword) {
-            var key;
-            if(userMatch.isadmin) {
-                key = process.env.MANAGER_KEY
-            } else {
-                key = process.env.CLIENT_KEY
-            }
-
-            // Initialize token string to identify user when they login
-            var token =
-                jwt.sign({
-                    id: userMatch.id,
-                    email: userMatch.email
-                }, key , { expiresIn: 60*60 });
-            return res.header('auth-token', token).json({
-                status : "ok",
-                code : 200,
-                user: userMatch,
-                token: token,
-                creat_at: new Date().toString(),
-                expire_at : new Date((Math.floor(Date.now() / 1000) + 3600)).toString() 
-            })
-        }
-        return res.json({ message: 'Wrong Password' })
-    })
-        .catch((error) => {
-            console.log(error)
-        })
-}
-
-const authorization = (req, res, next) => {
-    const token = req.header('auth-token');
-
-
-    if (!token) return res.status(401).send('Access Denied');
-
-    try {
-        if(req.header('isadmin')) {
-            const isadmin = req.header('isadmin');
-            if(isadmin) {
-                const verified = jwt.verify(token, process.env.MANAGER_KEY);
-            } else if(!isadmin) {
-                const verified = jwt.verify(token, process.env.CLIENT_KEY);
-            }
-        }
-        next();
-        // res.status(200).send('Accessed')
-    } catch (err) {
-        return res.status(400).send('Invalid Token');
-    }
-}
-
 module.exports = {
     getAllUsers,
-    createUser,
-    authentication,
-    authorization
+    createUser
 }

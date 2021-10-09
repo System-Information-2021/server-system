@@ -1,4 +1,3 @@
-const shortid = require('shortid')
 const pool = require('../../utils/db')
 
 var User = function(user) { 
@@ -90,7 +89,6 @@ User.getUserByEmail = (email, result) => {
         console.log(err.stack)
         result(null)
       } else {
-        console.log(res.rows[0])
         result(res.rows[0])
       }
     })
