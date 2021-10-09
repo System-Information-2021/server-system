@@ -11,6 +11,9 @@ const userRoute = require('./src/route/user.route')
 app.use(bodyParser.json()) // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
+app.get("/", (req, res) => {
+  res.send("server is running")
+})
 app.use('/user', userRoute)
 
 app.listen(process.env.PORT, () => {
