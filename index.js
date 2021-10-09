@@ -5,7 +5,7 @@ const cors = require('cors');
 const app = express()
 require('dotenv').config()
 
-const { authentication , authorization } = require('./src/auth/auth.middleware')
+const { authentication, authorization } = require('./src/auth/auth.middleware')
 // cor
 app.use(cors({
   origin: '*'
@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-
 
 app.use('/login', authentication)
 
-app.use('/user', authorization  ,  userRoute)
+app.use('/user', authorization, userRoute)
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)
