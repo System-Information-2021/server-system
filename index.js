@@ -1,9 +1,16 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const cors = require('cors');
+
 const app = express()
 require('dotenv').config()
 
 const { authentication , authorization } = require('./src/auth/auth.middleware')
+// cor
+app.use(cors({
+  origin: '*'
+}))
+
 
 // Define routes 
 const userRoute = require('./src/route/user.route')
