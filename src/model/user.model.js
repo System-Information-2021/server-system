@@ -2,21 +2,27 @@ const shortid = require('shortid')
 const pool = require('../../utils/db')
 
 var User = function(user) { 
-    this.id = shortid.generate();
-    this.name = user.name;
-    this.username = user.username;
+    this.email = user.email;
+    this.firstname = null;
+    this.lastname = null;
     this.password = user.password;
+    this.mobile_number = null;
+    this.isadmin = true;
+    this.address = null;
+    this.city = null;
+    this.comment = null;
+    this.company = null;
 } 
 
 // Create 
 User.save = (result,user) => {
   pool.connect((err,client,done) => {
     if(err) throw err
-    const {id, name , username , password } = user;
+    const { email , firstname , lastname , password ,isadmin , mobile_number , address, city , company , comment } = user;
     const query = {
-      text : `INSERT INTO users(id ,name ,username ,password)
-      VALUES($1 ,$2, $3, $4)`,
-      values : [id, name , username, password]
+      text : `INSERT INTO tbl_user(email , firstname , lastname , password, isadmin , mobile_number , address , city , company , comment)
+      VALUES($1 ,$2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      values : [email, firstname , lastname, password, isadmin ,mobile_number , address, city , company , comment]
     } 
     
     client.query(query, (err,res)=> {
@@ -36,14 +42,14 @@ User.save = (result,user) => {
 User.getAllUsers = (result) => {
     pool.connect((err, client, done) => {
         if (err) throw err
-        client.query('SELECT * FROM users', (err, res) => {
+        client.query('SELECT * FROM tbl_user', (err, res) => {
           done()
           if (err) {
             console.log(err.stack)
             result(null)
           } else {
-            console.log(res.rows[0])
-            result(res.rows[0])
+            console.log(res.rows)
+            result(res.rows)
           }
         })
       })
@@ -53,7 +59,7 @@ User.getUserById = (user_id, result) => {
   pool.connect((err, client, done) => {
     if (err) throw err
     const query = {
-      text : `SELECT * FROM users WHERE id=$1`,
+      text : `SELECT * FROM tbl_user WHERE id=$1`,
       values : [user_id]
     }
     client.query(query, (err, res) => {
@@ -70,33 +76,13 @@ User.getUserById = (user_id, result) => {
 }
 // Check existence of user input
 
-// Get User by username
-User.getUserByUsername = (username, result) => {
+// Get User by email
+User.getUserByEmail = (email, result) => {
   pool.connect((err, client, done) => {
     if (err) throw err
     const query = {
-      text : `SELECT * FROM users WHERE username=$1`,
-      values : [username]
-    }
-    client.query(query, (err, res) => {
-      done()
-      if (err) {
-        console.log(err.stack)
-        result(null)
-      } else {
-        console.log(res.rows[0])
-        result(res.rows[0])
-      }
-    })
-  })
-}
-// Get User by name
-User.getUserByName = (name, result) => {
-  pool.connect((err, client, done) => {
-    if (err) throw err
-    const query = {
-      text : `SELECT * FROM users WHERE name=$1`,
-      values : [name]
+      text : `SELECT * FROM tbl_user WHERE email=$1`,
+      values : [email]
     }
     client.query(query, (err, res) => {
       done()
