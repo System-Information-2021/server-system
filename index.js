@@ -3,6 +3,13 @@ const bodyParser = require('body-parser')
 const app = express()
 require('dotenv').config()
 
+// cor
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+});
+
+
 
 // Define routes 
 const userRoute = require('./src/route/user.route')
