@@ -41,24 +41,25 @@ const getAllUsers = (req, res) => {
 }
 
 const createUser = async (req, res) => {
-    const { 
+    const {
         firstname,
-        lastname, 
-        password, 
-        email, 
-        mobile_number, 
-        re_password , 
-        company , 
-        comment , 
-        address , 
+        lastname,
+        password,
+        email,
+        mobile_number,
+        re_password,
+        company,
+        comment,
+        address,
         city } = req.body;
 
     //Validation fields 
     if (!password || !email) {
-        res.json({ 
-            status : 'Bad Request',
-            code : 400,
-            message: 'Please fill all fields' })
+        res.json({
+            status: 'Bad Request',
+            code: 400,
+            message: 'Please fill all fields'
+        })
     } else {
         var error = []
         // validate email format
@@ -71,8 +72,8 @@ const createUser = async (req, res) => {
             if (result === null) {
                 return res.json({
                     status: 'Internal Server Error',
-                    code : 500,
-                    message : 'Something went wrong'
+                    code: 500,
+                    message: 'Something went wrong'
                 })
             }
             if (result === undefined) {
@@ -101,17 +102,17 @@ const createUser = async (req, res) => {
                     }
                 }
 
-                if(firstname && lastname) {
+                if (firstname && lastname) {
                     user.firstname = firstname;
                     user.lastname = lastname;
                 }
 
-                if(company) {
+                if (company) {
                     user.company = company;
                 }
                 // Check if input has address value, the city field must be enter following
-                if(address) {
-                    if(!city) {
+                if (address) {
+                    if (!city) {
                         error.push('No city')
                     } else {
                         user.address = address;
@@ -119,15 +120,15 @@ const createUser = async (req, res) => {
                     }
                 }
 
-                if(comment) {
+                if (comment) {
                     user.comment = comment;
                 }
                 // If any validations above has error, the function will return those errors and stop immediately
                 if (error.length !== 0) {
                     return res.json({
-                        status : 'Bad Request',
-                        code : 400,
-                        message : error
+                        status: 'Bad Request',
+                        code: 400,
+                        message: error
                     })
                 }
                 // console.log(user)
@@ -135,24 +136,24 @@ const createUser = async (req, res) => {
                 User.save((result) => {
                     if (result !== null) {
                         res.json({
-                            status : 'Created',
-                            code : 201,
-                            message : 'Successully'
+                            status: 'Created',
+                            code: 201,
+                            message: 'Register Successully'
                         })
                     } else {
                         res.json({
                             status: 'Internal Server Error',
-                            code : 500,
-                            message : 'Something went wrong'
+                            code: 500,
+                            message: 'Something went wrong'
                         })
                     }
                 }, user)
             } else {
                 // If email does exist in db, return the message for ui and asks user entering again 
                 return res.json({
-                    status : 'Bad Request',
-                    code : 400,
-                    message : 'Email does exist'
+                    status: 'Bad Request',
+                    code: 400,
+                    message: 'Email does exist'
                 })
             }
         })
