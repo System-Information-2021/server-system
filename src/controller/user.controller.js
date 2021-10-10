@@ -126,11 +126,13 @@ const createUser = async (req, res) => {
                 User.save((result) => {
                     if (result !== null) {
                         res.json({
-                            message: 'Successfully !'
+                            status : 'Successfully',
+                            code : 200
                         })
                     } else {
                         res.json({
-                            message: 'Something went wrong !'
+                            status: 'Something went wrong',
+                            code : 400
                         })
                     }
                 }, user)
