@@ -28,7 +28,7 @@ const getAllUsers = (req, res) => {
         });
         if (data !== null) {
             res.json({
-                status: 'ok',
+                status: 'OK',
                 code: 200,
                 data: data
             }).status(200)
@@ -55,7 +55,10 @@ const createUser = async (req, res) => {
 
     //Validation fields 
     if (!password || !email) {
-        res.json({ message: 'Please fill all fields' })
+        res.json({ 
+            status : 'Bad Request',
+            code : 400,
+            message: 'Please fill all fields' })
     } else {
         var error = []
         // validate email format
@@ -67,7 +70,9 @@ const createUser = async (req, res) => {
         User.getUserByEmail(email, async (result) => {
             if (result === null) {
                 return res.json({
-                    message: 'Something went wrong !'
+                    status: 'Internal Server Error',
+                    code : 500,
+                    message : 'Something went wrong'
                 })
             }
             if (result === undefined) {
@@ -119,30 +124,36 @@ const createUser = async (req, res) => {
                 }
                 // If any validations above has error, the function will return those errors and stop immediately
                 if (error.length !== 0) {
-                    return res.json(error)
+                    return res.json({
+                        status : 'Bad Request',
+                        code : 400,
+                        message : error
+                    })
                 }
                 // console.log(user)
                 // Save user infomation
                 User.save((result) => {
                     if (result !== null) {
                         res.json({
-                            status : 'Successfully',
-                            code : 200
+                            status : 'Created',
+                            code : 201,
+                            message : 'Successully'
                         })
                     } else {
                         res.json({
-                            status: 'Something went wrong',
-                            code : 400
+                            status: 'Internal Server Error',
+                            code : 500,
+                            message : 'Something went wrong'
                         })
                     }
                 }, user)
             } else {
                 // If email does exist in db, return the message for ui and asks user entering again 
-                return res.json(
-                    [
-                        'Email does exist'
-                    ]
-                )
+                return res.json({
+                    status : 'Bad Request',
+                    code : 400,
+                    message : 'Email does exist'
+                })
             }
         })
 
