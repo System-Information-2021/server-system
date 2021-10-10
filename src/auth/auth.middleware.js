@@ -5,7 +5,7 @@ const User = require('../model/user.model')
 const authentication = (req, res) => {
     var { email, password } = req.body;
     if (!email || !password) {
-        return res.status(500).json({
+        return res.status(400).json({
             status : 'Bad Resquest',
             code : 400,
             message: 'Please fill all fields' })
@@ -14,7 +14,7 @@ const authentication = (req, res) => {
     var promise = new Promise((resolve, reject) => {
         User.getUserByEmail(email, async (result) => {
             if (result === undefined) {
-                return res.status(500).json({
+                return res.status(400).json({
                     status : 'Bad Request',
                     code : 400,
                     message: 'User does not exist' 
