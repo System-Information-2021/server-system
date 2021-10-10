@@ -14,6 +14,8 @@ app.use(cors({
 
 // Define routes 
 const userRoute = require('./src/route/user.route')
+// Take function register from controller
+const { createUser } = require('./src/controller/user.controller')
 
 // Use middleware 
 app.use(bodyParser.json()) // for parsing application/json
@@ -22,7 +24,9 @@ app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-
 
 app.use('/login', authentication)
 
-app.use('/user', authorization, userRoute)
+app.use('/user', authorization , userRoute)
+
+app.post('/register' , createUser)
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)

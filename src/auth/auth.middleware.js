@@ -39,11 +39,15 @@ const authentication = (req, res) => {
                 code : 200,
                 data: userMatch,
                 token: token,
-                creat_at: new Date().toString(),
-                expire_at : new Date((Math.floor(Date.now() / 1000) + 3600)).toString() 
+                creat_at: new Date().toLocaleString(),
+                expire_at : new Date(Date.now() + 3600000).toLocaleString() 
             })
         }
-        return res.json({ message: 'Wrong Password' })
+        return res.json({
+             status: 'Error',
+             code : 400,
+             message : 'Wrong Password'
+             })
     })
         .catch((error) => {
             console.log(error)
