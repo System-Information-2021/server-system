@@ -1,5 +1,6 @@
-const bcrypt = require('bcrypt')
 const User = require('../model/user.model')
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 const ValidateEmail = (mail) => {
     var mailformat = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
@@ -20,7 +21,6 @@ const ValidatePhone = (phone) => {
     }
 }
 
-
 const getAllUsers = (req, res) => {
     User.getAllUsers((data) => {
         data.forEach(element => {
@@ -40,7 +40,7 @@ const getAllUsers = (req, res) => {
     })
 }
 
-const createUser = async (req, res) => {
+const register = async (req, res) => {
     const {
         firstname,
         lastname,
@@ -63,7 +63,7 @@ const createUser = async (req, res) => {
     } else {
         var error = []
         // validate email format
-        var check_mail = ValidateEmail(email, res);
+        var check_mail = ValidateEmail(email);
         if (!check_mail) {
             error.push('Wrong email format')
         }
@@ -94,7 +94,7 @@ const createUser = async (req, res) => {
                 })
                 // Check if input has number phone and validate their format 
                 if (mobile_number) {
-                    var check_phone = ValidatePhone(mobile_number, res);
+                    var check_phone = ValidatePhone(mobile_number);
                     if (!check_phone) {
                         error.push('Enter phone again')
                     } else {
@@ -138,7 +138,7 @@ const createUser = async (req, res) => {
                         res.json({
                             status: 'Created',
                             code: 201,
-                            message: 'Register Successully'
+                            message: 'Successully'
                         })
                     } else {
                         res.json({
@@ -162,7 +162,76 @@ const createUser = async (req, res) => {
     }
 }
 
+const authentication = (req, res) => {
+    var { email, password } = req.body;
+    if (!email || !password) {
+        return res.json({
+            status: 'Bad Resquest',
+            code: 400,
+            message: 'Please fill all fields'
+        })
+    }
+
+    try {
+        if (ValidateEmail(email)) {
+            User.getUserByEmail(email, async (result) => {
+                if (result === undefined) {
+                    return res.json({
+                        status: 'Bad Request',
+                        code: 400,
+                        message: 'User does not exist'
+                    });
+                } else {
+                    const matchPassword = await bcrypt.compare(password, result.password);
+
+                    if (matchPassword) {
+                        // Initialize token string to identify user when they login
+                        var token =
+                            jwt.sign({
+                                id: result.id,
+                                email: result.email
+                            }, process.env.SECRET_KEY, { expiresIn: 60 * 60 * 24});
+                        // Delete password attribute while returning a user data 
+                        delete result.password
+                        return res.header('auth-token', token).json({
+                            status: "OK",
+                            code: 200,
+                            data: result,
+                            token: token,
+                            creat_at: new Date().toLocaleString(),
+                            expire_at: new Date(Date.now() + 3600000*24).toLocaleString()
+                        })
+                    } else if (!matchPassword) {
+                        return res.json({
+                            status: 'Bad Request',
+                            code: 400,
+                            message: 'Wrong Password'
+                        })
+                    }
+                }
+            });
+        } else {
+            return res.json({
+                status: 'Bad Request',
+                code: 400,
+                message: 'Wrong email format'
+            })
+        }
+    } catch (error) {
+        return res.json({
+            status: 'Internal Server Error',
+            code: 500,
+            message: 'Something went wrong'
+        })
+    }
+
+
+}
+
+
+
 module.exports = {
     getAllUsers,
-    createUser
+    authentication,
+    register
 }
