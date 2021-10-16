@@ -1,21 +1,21 @@
-const { Client, Pool } = require('pg')
 require('dotenv').config()
-
-const pool = new Pool({
-    user: process.env.PGUSER,
-    host: process.env.PGHOST,
+const { Sequelize } = require('sequelize');
+  const db = new Sequelize({
     database: process.env.PGDATABASE,
+    username: process.env.PGUSER,
     password: process.env.PGPASSWORD,
-    port: process.env.PBPORT,
-    ssl: { rejectUnauthorized: false }
-})
+    host: process.env.PGHOST,
+    port: 5432,
+    dialect: "postgres",
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false // <<<<<<< YOU NEED THIS
+          }
+    },
+  });
 
-pool.connect(err => {
-    if (err) {
-        console.error('error connecting', err.stack)
-    } else {
-        console.log('Successfully connected')
-    }
-})
+db.authenticate()
+  .then(()=> console.log('connect successfully'));
 
-module.exports = pool;
+module.exports = db;
