@@ -1,6 +1,7 @@
 const User = require('../model/user.model')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+require('dotenv').config()
 
 
 const ValidateEmail = (mail) => {
@@ -172,11 +173,6 @@ const register = async (req, res, next) => {
         }
 
     }
-
-
-
-
-    //
 };
 
 const authentication = async (req, res) => {
@@ -225,11 +221,6 @@ const authentication = async (req, res) => {
                         creat_at: new Date().toLocaleString(),
                         expire_at: new Date(Date.now() + 60000).toLocaleString()
                     })
-
-
-
-
-                    //
                 } else if (!matchPassword) {
                     return res.json({
                         status: 'Bad Request',
@@ -258,9 +249,16 @@ const authentication = async (req, res) => {
 
 
 const getUserByToken = async (req, res) => {
-    const token = req.body.token;
+    if(!req.body.token) {
+        return res.json({
+            code : 400,
+            status : 'Bad Request',
+            message : 'User token is required'
+        })
+    }
+    const token = req.body.token
     console.log(token);
-    const userToken = await User.findOne({ where: { token: token } });
+    let userToken = await User.findOne({ where: { token: token } })
 
     if (userToken === null)
         res.json({
@@ -271,12 +269,26 @@ const getUserByToken = async (req, res) => {
             }
         })
     else {
-        userToken.password = undefined;
-        res.json({
-            code: 200,
-            status: 'OK',
-            data: userToken
-        })
+        jwt.verify(token, process.env.SECRET_KEY, function(err, decoded) {
+            if (err) {
+                const {name , message , expiredAt } = err
+                return res.json({
+                    code : 400,
+                    status : 'Bad Request',
+                    message: name,
+                    expiredAt: new Date(expiredAt).toLocaleString(),
+                    currentTime : new Date().toLocaleString()
+                })
+            } else {
+                userToken.password = undefined
+                return res.json({
+                    code : 200,
+                    status : 'OK',
+                    data : userToken
+                })
+            }
+          });
+
     }
 
 
