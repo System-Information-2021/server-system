@@ -36,5 +36,3 @@ app.use('/get-user-by-token',getUserByToken)
 app.listen(process.env.PORT, () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)
 })
-
-//xxxx

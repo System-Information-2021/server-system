@@ -211,7 +211,7 @@ const authentication = async (req, res) => {
                         jwt.sign({
                             id: User.id,
                             email: User.email
-                        }, process.env.SECRET_KEY, { expiresIn: 60 });
+                        }, process.env.SECRET_KEY, { expiresIn: 60*60 });
                     // luu token
                     await checkmail.update({ token: token });
                     return res.json({
@@ -219,7 +219,7 @@ const authentication = async (req, res) => {
                         code: 200,
                         token: token,
                         creat_at: new Date().toLocaleString(),
-                        expire_at: new Date(Date.now() + 60000).toLocaleString()
+                        expire_at: new Date(Date.now() + 60000*60).toLocaleString()
                     })
                 } else if (!matchPassword) {
                     return res.json({
@@ -262,8 +262,8 @@ const getUserByToken = async (req, res) => {
 
     if (userToken === null)
         res.json({
-            code: 200,
-            status: 'OK',
+            code: 400,
+            status: 'Bad Request',
             data: {
                 tokenError: "not token for user"
             }
