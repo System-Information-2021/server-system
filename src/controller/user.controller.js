@@ -59,7 +59,7 @@ const register = async (req, res, next) => {
 
 
     // check email exist
-    const checkmail = await User.findOne({
+    const userMatch = await User.findOne({
         where: {
             email: email
         }
@@ -79,7 +79,7 @@ const register = async (req, res, next) => {
             error.push('Wrong email format')
         }
         // Check existence of email input
-        if (checkmail == null) {
+        if (userMatch == null) {
             // Validate re-password of end-user
             if (!re_password) {
                 error.push('Enter the re-password')
@@ -185,7 +185,7 @@ const authentication = async (req, res) => {
         })
     }
     // check email exist
-    var checkmail = await User.findOne({
+    var userMatch = await User.findOne({
         where: {
             email: email
         },
@@ -196,7 +196,7 @@ const authentication = async (req, res) => {
     try {
         if (ValidateEmail(email)) {
             //KT xem cai email hay khong
-            if (checkmail == null) {
+            if (userMatch == null) {
                 return res.json({
                     status: 'Bad Request',
                     code: 400,
@@ -204,16 +204,16 @@ const authentication = async (req, res) => {
                 });
             }
             else {
-                const matchPassword = await bcrypt.compare(password, checkmail.password);
+                const matchPassword = await bcrypt.compare(password, userMatch.password);
                 if (matchPassword) {
                     // Initialize token string to identify user when they login
                     var token =
                         jwt.sign({
-                            id: User.id,
-                            email: User.email
+                            id: userMatch.id,
+                            email: userMatch.email
                         }, process.env.SECRET_KEY, { expiresIn: 60*60 });
                     // luu token
-                    await checkmail.update({ token: token });
+                    await userMatch.update({ token: token });
                     return res.json({
                         status: "OK",
                         code: 200,

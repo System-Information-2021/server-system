@@ -30,13 +30,6 @@ const addCategory = async (req, res) => {
 }
 
 const getCategoryById = async (req, res) => {
-    if (!req.params.id_category) {
-        return res.json({
-            code: 400,
-            status: 'Bad Request',
-            message: 'Category id is required '
-        })
-    }
     const id_category = req.params.id_category
     const matchCategory = await Category.findByPk(id_category)
 
@@ -136,9 +129,27 @@ const deleteCategory = async (req,res) => {
     }
 }
 
+const getAllCategories = async (req,res) => {
+    try {
+        const listCategories = await Category.findAll()
+        return res.json({
+            code : 200,
+            status : 'OK',
+            data : listCategories
+        })
+    } catch (err) {
+        return res.json({
+            code : 500,
+            status : 'Interal Error',
+            message : 'Something went wrong'
+        })
+    }
+}
+
 module.exports = {
     addCategory,
     getCategoryById,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    getAllCategories
 }
