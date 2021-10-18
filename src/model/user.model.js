@@ -1,4 +1,4 @@
-const { Sequelize, DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const db = require('../../utils/db');
 
 const User = db.define('tbl_users', {
@@ -12,11 +12,11 @@ const User = db.define('tbl_users', {
     },
     firstname: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     lastname: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     email: {
         type: DataTypes.STRING,
@@ -30,7 +30,7 @@ const User = db.define('tbl_users', {
     }  ,
     mobile_number:{
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     isadmin:{
       type:DataTypes.BOOLEAN,
@@ -38,19 +38,19 @@ const User = db.define('tbl_users', {
     },
     company: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     address: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
     },
     city: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
     },
     comment: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
     },
     token: {
       type: DataTypes.STRING,

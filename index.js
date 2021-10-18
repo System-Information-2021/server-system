@@ -15,6 +15,7 @@ app.use(cors({
 
 // Define routes 
 const userRoute = require('./src/route/user.route')
+const categoriesRoute = require('./src/route/categories.route')
 // Take function register from controller
 const { getUserByToken, register } = require('./src/controller/user.controller')
 
@@ -31,10 +32,10 @@ app.use('/register' , register)
 
 app.use('/get-user-by-token',getUserByToken)
 
+app.use('/category', categoriesRoute)
+
 
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)
 })
-
-//xxxx
