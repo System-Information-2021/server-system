@@ -1,21 +1,20 @@
 const { DataTypes } = require('sequelize')
 const db = require('../../utils/db')
 
-const Category = db.define('tbl_categories', {
+const Brand = db.define('tbl_brand', {
     id : {
         type : DataTypes.INTEGER,
         allowNull : false,
         primaryKey : true,
         autoIncrement : true,
-        field : 'id_category'
+        field : 'id_brand'
     },
     name : {
         type : DataTypes.STRING,
-        field : 'name_category',
+        field : 'name_brand',
         allowNull : false
     }
 })
+db.sync({ alter : true })
 
-// db.sync({alter : true});=
-
-module.exports = Category;
+module.exports = Brand;
