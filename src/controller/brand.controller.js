@@ -131,12 +131,19 @@ const deleteBrand = async (req,res) => {
 
 const getAllBrand = async (req,res) => {
     try {
-        const listBrand = await Brand.findAll()
-        return res.json({
-            code : 200,
-            status : 'OK',
-            data : listBrand
-        })
+        if (req.query.page) {
+            const page = req.query.page - 1
+            const brandList = await Brand.findAndCountAll({
+                limit: 5,
+                offset: page * 5
+            })
+
+            return res.json({
+                code: 200,
+                status: 'OK',
+                data: brandList.rows
+            })
+        }
     } catch (err) {
         return res.json({
             code : 500,
