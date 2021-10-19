@@ -132,16 +132,26 @@ const deleteBrand = async (req,res) => {
 const getAllBrand = async (req,res) => {
     try {
         if (req.query.page) {
-            const page = req.query.page - 1
-            const brandList = await Brand.findAndCountAll({
-                limit: 5,
-                offset: page * 5
-            })
-
+            const page = req.query.page
+            let { count } = await Brand.findAndCountAll()
+            let listBrand;
+            
+            if(count <= 7) {
+                listBrand = await Brand.findAndCountAll({
+                    limit: 7,
+                    offset : 0
+                })
+            } else {
+                listBrand = await Brand.findAndCountAll({
+                    limit: ((count - page*7) > 0) ? 7 : count%7,
+                    offset: ((count - page*7) > 0) ? count - page*7 : 0
+                })
+            }
             return res.json({
                 code: 200,
                 status: 'OK',
-                data: brandList.rows
+                totalPage : Math.ceil(listBrand.count/7),
+                data: listBrand.rows.reverse()
             })
         }
     } catch (err) {

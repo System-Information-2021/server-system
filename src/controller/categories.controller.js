@@ -132,16 +132,26 @@ const deleteCategory = async (req, res) => {
 const getAllCategories = async (req, res) => {
     try {
         if (req.query.page) {
-            const page = req.query.page - 1
-            const listCategories = await Category.findAndCountAll({
-                limit: 5,
-                offset: page * 5
-            })
-
+            const page = req.query.page 
+            let { count } = await Category.findAndCountAll();
+            let listCategory;
+            
+            if(count <= 7) {
+                listCategory = await Category.findAndCountAll({
+                    limit: 7,
+                    offset: 0
+                })
+            } else {
+                listCategory = await Category.findAndCountAll({
+                    limit:  ((count - page*7) > 0) ? 7 : count%7,
+                    offset: ((count - page*7) > 0) ? count - page*7 : 0
+                })
+            }
             return res.json({
                 code: 200,
                 status: 'OK',
-                data: listCategories.rows
+                totalPage : Math.ceil(listCategory.count/7),
+                data: listCategory.rows.reverse()
             })
         }
     } catch (err) {
