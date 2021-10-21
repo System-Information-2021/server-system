@@ -13,8 +13,9 @@ const Brand = db.define('tbl_brand', {
         type : DataTypes.STRING,
         field : 'name_brand',
         allowNull : false
-    }
-})
-db.sync({ alter : true })
+    },
+    
+})  
+
 
 module.exports = Brand;

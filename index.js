@@ -37,7 +37,9 @@ app.use('/category', categoriesRoute)
 
 app.use('/brand', brandRoute)
 
-
+const product = require('./src/model/product.model')
+const order= require('./src/model/order.model')
+const order_detail= require('./src/model/order_detail.model')
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)

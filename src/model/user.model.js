@@ -59,6 +59,7 @@ const User = db.define('tbl_users', {
 
   } );
   
-  db.sync();
+  // db.sync();
+  // console.log('sss');
 
 module.exports=  User;
