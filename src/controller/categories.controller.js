@@ -73,75 +73,92 @@ const updateCategory = async (req, res) => {
 
         let name_category = req.body.name_category
         const checkCategory = await Category.findOne({
-            where : {
-                name : name_category
+            where: {
+                name: name_category
             }
         })
-        if(checkCategory === null) {
+        if (checkCategory === null) {
             name_category = name_category.charAt(0).toUpperCase() + name_category.slice(1);
             const newCategory = await Category.update({
                 name: name_category,
             },
                 {
-                    where: { id : id_category }
+                    where: { id: id_category }
                 }
             )
             return res.json({
                 code: 200,
-                status : 'Successfully',
+                status: 'Successfully',
             })
-        } else if(checkCategory !== null) {
+        } else if (checkCategory !== null) {
             return res.json({
-                code : 400, 
-                status : 'Existed',
-                message : 'Category does exist'
+                code: 400,
+                status: 'Existed',
+                message: 'Category does exist'
             })
         }
-    } else if(existCategory === null) {
+    } else if (existCategory === null) {
         return res.json({
-            code : 400,
-            status : 'Not Found',
-            message : 'Category id is not found'
+            code: 400,
+            status: 'Not Found',
+            message: 'Category id is not found'
         })
     }
 }
 
-const deleteCategory = async (req,res) => {
+const deleteCategory = async (req, res) => {
     const id_category = req.params.id_category
     const existCategory = await Category.findByPk(id_category)
 
-    if(existCategory !== null) {
+    if (existCategory !== null) {
         const result = await Category.destroy({
-            where : {
-                id : id_category
+            where: {
+                id: id_category
             }
         })
         return res.json({
-            code : 200,
-            status : 'Successfully'
+            code: 200,
+            status: 'Successfully'
         })
-    } else if(existCategory === null) {
+    } else if (existCategory === null) {
         return res.json({
-            code : 400,
-            status : 'Not found',
-            message : 'Category id is not found'
+            code: 400,
+            status: 'Not found',
+            message: 'Category id is not found'
         })
     }
 }
 
-const getAllCategories = async (req,res) => {
+const getAllCategories = async (req, res) => {
     try {
-        const listCategories = await Category.findAll()
-        return res.json({
-            code : 200,
-            status : 'OK',
-            data : listCategories
-        })
+        if (req.query.page) {
+            const page = req.query.page 
+            let { count } = await Category.findAndCountAll();
+            let listCategory;
+            
+            if(count <= 7) {
+                listCategory = await Category.findAndCountAll({
+                    limit: 7,
+                    offset: 0
+                })
+            } else {
+                listCategory = await Category.findAndCountAll({
+                    limit:  ((count - page*7) > 0) ? 7 : count%7,
+                    offset: ((count - page*7) > 0) ? count - page*7 : 0
+                })
+            }
+            return res.json({
+                code: 200,
+                status: 'OK',
+                totalPage : Math.ceil(listCategory.count/7),
+                data: listCategory.rows.reverse()
+            })
+        }
     } catch (err) {
         return res.json({
-            code : 500,
-            status : 'Interal Error',
-            message : 'Something went wrong'
+            code: 500,
+            status: 'Interal Error',
+            message: 'Something went wrong'
         })
     }
 }
