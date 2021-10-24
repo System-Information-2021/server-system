@@ -21,6 +21,7 @@ const userRoute = require('./src/route/user.route')
 const categoriesRoute = require('./src/route/categories.route')
 const brandRoute= require('./src/route/brands.route')
 const productRoute = require('./src/route/products.route')
+const customerRoute = require('./src/route/customer.route')
 // Take function register from controller
 const { getUserByToken, register } = require('./src/controller/user.controller')
 
@@ -37,11 +38,13 @@ app.use('/register' , register)
 
 app.use('/get-user-by-token',getUserByToken)
 
-app.use('/category', categoriesRoute)
+app.use('/category', authorization , categoriesRoute)
 
-app.use('/brand', brandRoute)
+app.use('/brand', authorization ,brandRoute)
 
-app.use('/product', productRoute )
+app.use('/product', authorization ,productRoute )
+
+app.use('/customer', customerRoute)
 
 app.use("/uploads", express.static(path.resolve(__dirname, 'uploads')));
 
