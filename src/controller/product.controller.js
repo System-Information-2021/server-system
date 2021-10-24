@@ -58,8 +58,10 @@ const getProductById = async (req,res) => {
         const { id } = req.params
         const product = await Product.findOne({
             where : { id : id },
-            include : ['category', 'brand']
+            include : { all : true }
         })
+        product.id_category = undefined,
+        product.id_brand = undefined
         return res.json({
             code : 200,
             status : 'OK',
@@ -153,16 +155,85 @@ const getAllProduct = async (req,res) => {
         let listProduct;
 
         if(count <= 7) {
-            listProduct = await Product.findAndCountAll({
+            listProduct = await Product.findAndCountAll({ include : { all : true } }, {
                 limit : 7,
                 offset : 0
             })
         } else {
-            listProduct = await Product.findAndCountAll({
+            listProduct = await Product.findAndCountAll({ include : { all : true } },{
                 limit : ((count - page*7) > 0) ? 7 : count%7,
                 offset : ((count - page*7) > 0) ? count - page*7 : 0
             })
         }
+        listProduct.rows.forEach((product) => {
+            product.id_brand = product.id_category = undefined
+        })
+        return res.json({
+            code : 200,
+            status : 'OK',
+            totalPage : Math.ceil(count/7),
+            data : listProduct.rows.reverse()
+        })
+    } catch (err) {
+        return res.json({
+            code : 500,
+            status : 'Internal Error',
+            message : 'Something went wrong' 
+        })
+    }
+}
+
+const activeProduct = async (req,res) => {
+    try {
+        const { id_product } = req.params
+
+        const product = await Product.findByPk(id_product)
+
+        if(product !== null) {
+            product.update({ active : true })
+            return res.json({
+                code : 200,
+                status : 'Actived',
+                message : 'Successfully'
+            })
+        } else {
+            return res.json({
+                code : 400,
+                status : 'Bad Request',
+                message : 'Product does not exist'
+            })
+        }
+    } catch (err) {
+        return res.json({
+            code : 500,
+            status : 'Interal Error',
+            message : 'Something went wrong'
+        })
+    }
+}
+
+
+const getAllProductForCustomer = async (req,res) => {
+    try {
+        const { page } = req.query
+        const { count } = await Product.findAndCountAll({ where : { active : true } });
+
+        let listProduct;
+
+        if(count <= 7) {
+            listProduct = await Product.findAndCountAll({ where : { active : true } , include : { all : true } }, {
+                limit : 7,
+                offset : 0
+            })
+        } else {
+            listProduct = await Product.findAndCountAll({ where : { active : true } , include : { all : true } },{
+                limit : ((count - page*7) > 0) ? 7 : count%7,
+                offset : ((count - page*7) > 0) ? count - page*7 : 0
+            })
+        }
+        listProduct.rows.forEach((product) => {
+            product.id_brand = product.id_category = undefined
+        })
         return res.json({
             code : 200,
             status : 'OK',
@@ -183,5 +254,7 @@ module.exports = {
     getProductById,
     deleteProduct,
     updateProductInfo,
-    getAllProduct
+    getAllProduct,
+    activeProduct,
+    getAllProductForCustomer
 }
