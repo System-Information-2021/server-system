@@ -1,8 +1,9 @@
 const { DataTypes } = require('sequelize')
 const db = require('../../utils/db');
-const brand = require('../model/brands.model')
-const categories = require('../model/categories.model')
-const product = db.define('tbl_products', {
+const Brand = require('../model/brands.model')
+const Category = require('../model/categories.model')
+
+const Product = db.define('tbl_products', {
     id : {
         type : DataTypes.INTEGER,
         allowNull : false,
@@ -12,31 +13,40 @@ const product = db.define('tbl_products', {
     },
     name : {
         type : DataTypes.STRING,
-        allowNull : false
+        allowNull : false,
+        validate : {
+            notEmpty : { msg : 'Product must not be empty' },
+            notNull : { msg : 'Product must have a name' }
+        }
     },
     price : {
         type : DataTypes.INTEGER,
-        allowNull : false
+        allowNull : false,
+        validate : {
+            isInt : { msg : 'Price can only be an integer ' },
+            notEmpty : { msg : 'Product must have a price' }
+        }
     },
     quantity : {
         type : DataTypes.INTEGER,
-        allowNull : false
+        allowNull : false,
+        defaultValue : 0
     },
     description : {
         type : DataTypes.STRING,
-        allowNull : false
+        allowNull : true
     },
     image1 : {
         type : DataTypes.STRING,
-        allowNull : false
+        allowNull : true
     },
     image2 : {
         type : DataTypes.STRING,
-        allowNull : false
+        allowNull : true
     },
     image3 : {
         type : DataTypes.STRING,
-        allowNull : false
+        allowNull : true
     },
     active :{
         type: DataTypes.BOOLEAN,
@@ -46,15 +56,12 @@ const product = db.define('tbl_products', {
 
 })
   // add foreign key
-brand.hasMany(product, {
-    foreignKey: 'id_brand'
-  });
- 
-categories.hasMany(product,{
-    foreignKey: 'id_category'
-});
+Brand.hasMany(Product, {foreignKey : 'id_brand', as : 'products'})
+Product.belongsTo(Brand, { foreignKey : 'id_brand' , as : 'brand' })
+
+Category.hasMany(Product, { foreignKey : 'id_category', as : 'products'})
+Product.belongsTo(Category, { foreignKey : 'id_category', as : 'category' })
 
 
-db.sync({alter : true});
-module.exports = product;
+module.exports = Product;
 

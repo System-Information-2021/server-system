@@ -5,7 +5,7 @@ const { authorization } = require('../auth/auth.middleware')
 const router = express.Router()
 
 router.post('/add', authorization ,controller.addCategory)
-router.get('/:id_category', controller.getCategoryById)
+router.get('/:id_category', controller.getAllProductByCategory)
 router.put('/update/:id_category', authorization , controller.updateCategory)
 router.delete('/delete/:id_category', authorization , controller.deleteCategory)
 router.get('/', controller.getAllCategories)

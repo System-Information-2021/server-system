@@ -16,6 +16,6 @@ const { Sequelize } = require('sequelize');
   });
 
 db.authenticate()
-  .then(()=> console.log('connect successfully'));
+  .then(()=> console.log('Connect successfully'));
 
 module.exports = db;

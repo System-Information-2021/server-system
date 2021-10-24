@@ -1,5 +1,5 @@
-const e = require('express');
 const Category = require('../model/categories.model')
+const Product = require('../model/product.model')
 
 const addCategory = async (req, res) => {
     let { name } = req.body;
@@ -132,25 +132,25 @@ const deleteCategory = async (req, res) => {
 const getAllCategories = async (req, res) => {
     try {
         if (req.query.page) {
-            const page = req.query.page 
+            const page = req.query.page
             let { count } = await Category.findAndCountAll();
             let listCategory;
-            
-            if(count <= 7) {
+
+            if (count <= 7) {
                 listCategory = await Category.findAndCountAll({
                     limit: 7,
                     offset: 0
                 })
             } else {
                 listCategory = await Category.findAndCountAll({
-                    limit:  ((count - page*7) > 0) ? 7 : count%7,
-                    offset: ((count - page*7) > 0) ? count - page*7 : 0
+                    limit: ((count - page * 7) > 0) ? 7 : count % 7,
+                    offset: ((count - page * 7) > 0) ? count - page * 7 : 0
                 })
             }
             return res.json({
                 code: 200,
                 status: 'OK',
-                totalPage : Math.ceil(listCategory.count/7),
+                totalPage: Math.ceil(listCategory.count / 7),
                 data: listCategory.rows.reverse()
             })
         }
@@ -163,10 +163,64 @@ const getAllCategories = async (req, res) => {
     }
 }
 
+const getAllProductByCategory = async (req, res) => {
+    try {
+        const { id_category } = req.params
+
+        const matchCategory = await Category.findByPk(id_category)
+
+        if (matchCategory !== null) {
+            const { count } = await Product.findAndCountAll({ where: { id_category: matchCategory.id } })
+            const { page } = req.query
+            let category;
+            if (count <= 7) {
+                category = await Category.findAndCountAll({
+                    where: { id: matchCategory.id },
+                    include: 'products'
+                }, {
+                    size: 7,
+                    offset: 0
+                })
+            } else {
+                category = await Category.findAndCountAll({
+                    where: { id: matchCategory.id},
+                    include: 'products'
+                }, {
+                    size: ((count - page * 7) > 0) ? 7 : count % 7,
+                    offset: ((count - page * 7) > 0) ? (count - page * 7) : 0
+                })
+            }
+            let [listProduct] = category.rows
+
+            await listProduct.products.reverse()
+            
+            return res.json({
+                code: 200,
+                status: 'OK',
+                data: listProduct
+            })
+        } else {
+            return res.json({
+                code: 400,
+                status: 'Bad Request',
+                message: 'Category does not exist'
+            })
+        }
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: 'Something went wrong'
+        })
+    }
+}
+
 module.exports = {
     addCategory,
     getCategoryById,
     updateCategory,
     deleteCategory,
-    getAllCategories
+    getAllCategories,
+    getAllProductByCategory
 }
