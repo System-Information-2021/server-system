@@ -2,9 +2,12 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors');
 const db = require('./utils/db')
+const path = require('path')
 
 const app = express()
 require('dotenv').config()
+
+
 
 const { authorization } = require('./src/auth/auth.middleware')
 const serviceRoute = require('./src/route/login.route')
@@ -39,6 +42,8 @@ app.use('/category', categoriesRoute)
 app.use('/brand', brandRoute)
 
 app.use('/product', productRoute )
+
+app.use("/uploads", express.static(path.resolve(__dirname, 'uploads')));
 
 app.listen(process.env.PORT, async () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)
