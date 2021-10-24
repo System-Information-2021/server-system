@@ -1,5 +1,6 @@
 
 const Brand = require('../model/brands.model')
+const Product = require('../model/product.model')
 
 const addBrand = async (req, res) => {
     let { name } = req.body;
@@ -163,10 +164,65 @@ const getAllBrand = async (req,res) => {
     }
 }
 
+const getAllProductByBrand = async (req, res) => {
+    try {
+        const { id_brand } = req.params
+
+        const matchBrand = await Brand.findByPk(id_brand)
+
+        if (matchBrand !== null) {
+            const { count } = await Product.findAndCountAll({ where: { id_brand: matchBrand.id } })
+            const { page } = req.query
+            let brand;
+            if (count <= 7) {
+                brand = await Brand.findAndCountAll({
+                    where: { id: matchBrand.id },
+                    include: 'products'
+                }, {
+                    size: 7,
+                    offset: 0
+                })
+            } else {
+                brand = await Brand.findAndCountAll({
+                    where: { id: matchBrand.id},
+                    include: 'products'
+                }, {
+                    size: ((count - page * 7) > 0) ? 7 : count % 7,
+                    offset: ((count - page * 7) > 0) ? (count - page * 7) : 0
+                })
+            }
+            let [listProduct] = brand.rows
+
+            await listProduct.products.reverse()
+            
+            return res.json({
+                code: 200,
+                status: 'OK',
+                data: listProduct
+            })
+        } else {
+            return res.json({
+                code: 400,
+                status: 'Bad Request',
+                message: 'Brand does not exist'
+            })
+        }
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: 'Something went wrong'
+        })
+    }
+}
+
+
 module.exports = {
     addBrand,
     getBrandById,
     updateBrand,
     deleteBrand,
-    getAllBrand
+    getAllBrand,
+    getAllProductByBrand
 }

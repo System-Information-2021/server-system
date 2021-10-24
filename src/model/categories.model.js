@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize')
-const db = require('../../utils/db')
+const db = require('../../utils/db');
 
 const Category = db.define('tbl_categories', {
     id : {
@@ -16,6 +16,6 @@ const Category = db.define('tbl_categories', {
     }
 })
 
-// db.sync({alter : true});=
+// Category.sync({alter : true})
 
 module.exports = Category;

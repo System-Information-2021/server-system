@@ -1,6 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors');
+const db = require('./utils/db')
 
 const app = express()
 require('dotenv').config()
@@ -12,11 +13,11 @@ app.use(cors({
   origin: '*'
 }))
 
-
 // Define routes 
 const userRoute = require('./src/route/user.route')
 const categoriesRoute = require('./src/route/categories.route')
 const brandRoute= require('./src/route/brands.route')
+const productRoute = require('./src/route/products.route')
 // Take function register from controller
 const { getUserByToken, register } = require('./src/controller/user.controller')
 
@@ -37,10 +38,10 @@ app.use('/category', categoriesRoute)
 
 app.use('/brand', brandRoute)
 
-const product = require('./src/model/product.model')
-const order= require('./src/model/order.model')
-const order_detail= require('./src/model/order_detail.model')
+app.use('/product', productRoute )
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT, async () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)
 })
+
+
