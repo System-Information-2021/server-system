@@ -22,8 +22,6 @@ const categoriesRoute = require('./src/route/categories.route')
 const brandRoute= require('./src/route/brands.route')
 const productRoute = require('./src/route/products.route')
 const customerRoute = require('./src/route/customer.route')
-// Take function register from controller
-const { getUserByToken, register } = require('./src/controller/user.controller')
 
 // Use middleware 
 app.use(bodyParser.json()) // for parsing application/json
@@ -33,10 +31,6 @@ app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-
 app.use('/', serviceRoute)
 
 app.use('/user', authorization , userRoute)
-
-app.use('/register' , register)
-
-app.use('/get-user-by-token',getUserByToken)
 
 app.use('/category', authorization , categoriesRoute)
 
