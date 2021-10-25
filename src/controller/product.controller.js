@@ -48,8 +48,17 @@ const addProduct = async (req, res) => {
                 message: 'Product must have both of the brand and the category'
             })
         }
-    } catch (errr) {
-        return res.json(errr)
+    } catch (err) {
+        let errors = []
+        
+        err.errors.forEach((each) => {
+            errors.push(each.message)
+        })
+        return res.json({
+            code : 400,
+            status : 'Bad Request',
+            message : errors
+        })
     }
 }
 
