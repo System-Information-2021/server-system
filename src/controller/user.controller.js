@@ -211,7 +211,7 @@ const authentication = async (req, res) => {
                         jwt.sign({
                             id: userMatch.id,
                             email: userMatch.email
-                        }, process.env.SECRET_KEY, { expiresIn: 60*60 });
+                        }, process.env.SECRET_KEY, { expiresIn: 60 * 60 });
                     // luu token
                     await userMatch.update({ token: token });
                     return res.json({
@@ -219,7 +219,7 @@ const authentication = async (req, res) => {
                         code: 200,
                         token: token,
                         creat_at: new Date().toLocaleString(),
-                        expire_at: new Date(Date.now() + 60000*60).toLocaleString()
+                        expire_at: new Date(Date.now() + 60000 * 60).toLocaleString()
                     })
                 } else if (!matchPassword) {
                     return res.json({
@@ -249,11 +249,11 @@ const authentication = async (req, res) => {
 
 
 const getUserByToken = async (req, res) => {
-    if(!req.body.token) {
+    if (!req.body.token) {
         return res.json({
-            code : 400,
-            status : 'Bad Request',
-            message : 'User token is required'
+            code: 400,
+            status: 'Bad Request',
+            message: 'User token is required'
         })
     }
     const token = req.body.token
@@ -269,25 +269,25 @@ const getUserByToken = async (req, res) => {
             }
         })
     else {
-        jwt.verify(token, process.env.SECRET_KEY, function(err, decoded) {
+        jwt.verify(token, process.env.SECRET_KEY, function (err, decoded) {
             if (err) {
-                const {name , message , expiredAt } = err
+                const { name, message, expiredAt } = err
                 return res.json({
-                    code : 400,
-                    status : 'Bad Request',
+                    code: 400,
+                    status: 'Bad Request',
                     message: name,
                     expiredAt: new Date(expiredAt).toLocaleString(),
-                    currentTime : new Date().toLocaleString()
+                    currentTime: new Date().toLocaleString()
                 })
             } else {
                 userToken.password = undefined
                 return res.json({
-                    code : 200,
-                    status : 'OK',
-                    data : userToken
+                    code: 200,
+                    status: 'OK',
+                    data: userToken
                 })
             }
-          });
+        });
 
     }
 
