@@ -5,6 +5,7 @@ const path = require('path')
 
 const addProduct = async (req, res) => {
     let { id_brand, id_category } = req.body
+    console.log(req.body)
     id_brand = parseInt(id_brand)
     id_category = parseInt(id_category)
 
