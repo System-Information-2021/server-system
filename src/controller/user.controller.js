@@ -257,7 +257,6 @@ const getUserByToken = async (req, res) => {
         })
     }
     const token = req.body.token
-    console.log(token);
     let userToken = await User.findOne({ where: { token: token } })
 
     if (userToken === null)

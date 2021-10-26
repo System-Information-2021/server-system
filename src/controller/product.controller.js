@@ -5,25 +5,29 @@ const path = require('path')
 
 const addProduct = async (req, res) => {
     let { id_brand, id_category } = req.body
-    id_brand = parseInt(id_brand)
-    id_category = parseInt(id_category)
+    console.log("brand", id_brand, "category", id_category)
+    brand_id = parseInt(id_brand)
+    category_id = parseInt(id_category)
 
-    if (isNaN(id_brand) || isNaN(id_category)) {
+    if (isNaN(brand_id) || isNaN(category_id)) {
         return res.json({
             code: 400,
             status: 'Bad Request',
             message: 'Brand or category have not been filled'
         })
     }
+
     try {
-        const brand = await Brand.findByPk(id_brand)
-        const category = await Category.findByPk(id_category)
+        const brand = await Brand.findByPk(brand_id)
+        const category = await Category.findByPk(category_id)
         if (brand !== null && category !== null) {
             const {
                 name,
                 price,
                 description
             } = req.body
+            console.log(name, price, description)
+
             const productMatch = await Product.findOne({ where: { name: name } })
             if (productMatch === null) {
                 const [{ filename: image1 }, { filename: image2 }, { filename: image3 }] = req.files
