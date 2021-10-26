@@ -4,7 +4,17 @@ const Category = require('../model/categories.model')
 const path = require('path')
 
 const addProduct = async (req, res) => {
-    const { id_brand, id_category } = req.body
+    let { id_brand, id_category } = req.body
+    id_brand = parseInt(id_brand)
+    id_category = parseInt(id_category)
+
+    if (isNaN(id_brand) || isNaN(id_category)) {
+        return res.json({
+            code: 400,
+            status: 'Bad Request',
+            message: 'Brand or category have not been filled'
+        })
+    }
     try {
         const brand = await Brand.findByPk(id_brand)
         const category = await Category.findByPk(id_category)
@@ -49,16 +59,27 @@ const addProduct = async (req, res) => {
             })
         }
     } catch (err) {
-        let errors = []
-        
-        err.errors.forEach((each) => {
-            errors.push(each.message)
-        })
-        return res.json({
-            code : 400,
-            status : 'Bad Request',
-            message : errors
-        })
+        if (err.errors) {
+            let errors = []
+            if (err.length > 1) {
+                err.errors.forEach((each) => {
+                    errors.push(each.message)
+                })
+            } else {
+                errors.push(err.errors[0].message)
+            }
+            return res.json({
+                code: 400,
+                status: 'Bad Request',
+                message: errors
+            })
+        } else {
+            return res.json({
+                code: 500,
+                status: 'Internal Error',
+                message: 'Something went wrong'
+            })
+        }
     }
 }
 
@@ -77,7 +98,11 @@ const getProductById = async (req, res) => {
             data: product
         })
     } catch (err) {
-        res.json(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: 'Something wnet wrong'
+        })
     }
 }
 
@@ -161,29 +186,36 @@ const getAllProduct = async (req, res) => {
         const { page } = req.query
         const { count } = await Product.findAndCountAll();
 
-        let listProduct;
-
+        let listProduct = []
+        let data;
         if (count <= 7) {
-            listProduct = await Product.findAndCountAll({ include: { all: true } }, {
+            data = await Product.findAll({
                 limit: 7,
                 offset: 0
             })
         } else {
-            listProduct = await Product.findAndCountAll({ include: { all: true } }, {
+            data = await Product.findAll({
                 limit: ((count - page * 7) > 0) ? 7 : count % 7,
                 offset: ((count - page * 7) > 0) ? count - page * 7 : 0
             })
+            for (var i = 0; i < data.length; i++) {
+                let category = await data[i].getCategory()
+                let brand = await data[i].getBrand()
+                data[i].id_brand = data[i].id_category = undefined
+                var plain = await data[i].get({ plain: true })
+                plain['category'] = await category.get({ plain: true })
+                plain['brand'] = await brand.get({ plain: true })
+                listProduct.push(plain)
+            }
+            return res.json({
+                code: 200,
+                status: 'OK',
+                totalPage: Math.ceil(count / 7),
+                data: listProduct.reverse()
+            })
         }
-        listProduct.rows.forEach((product) => {
-            product.id_brand = product.id_category = undefined
-        })
-        return res.json({
-            code: 200,
-            status: 'OK',
-            totalPage: Math.ceil(count / 7),
-            data: listProduct.rows.reverse()
-        })
     } catch (err) {
+        console.log(err)
         return res.json({
             code: 500,
             status: 'Internal Error',
@@ -225,30 +257,36 @@ const activeProduct = async (req, res) => {
 const getAllProductForCustomer = async (req, res) => {
     try {
         const { page } = req.query
-        const { count } = await Product.findAndCountAll({ where: { active: true } });
+        const { count } = await Product.findAndCountAll();
 
-        let listProduct;
-
+        let listProduct = []
+        let data;
         if (count <= 7) {
-            listProduct = await Product.findAndCountAll({ where: { active: true }, include: { all: true } }, {
+            data = await Product.findAll({ where: { active: true } }, {
                 limit: 7,
                 offset: 0
             })
         } else {
-            listProduct = await Product.findAndCountAll({ where: { active: true }, include: { all: true } }, {
+            data = await Product.findAll({ where: { active: true } }, {
                 limit: ((count - page * 7) > 0) ? 7 : count % 7,
                 offset: ((count - page * 7) > 0) ? count - page * 7 : 0
             })
+            for (var i = 0; i < data.length; i++) {
+                let category = await data[i].getCategory()
+                let brand = await data[i].getBrand()
+                data[i].id_brand = data[i].id_category = undefined
+                var plain = await data[i].get({ plain: true })
+                plain['category'] = await category.get({ plain: true })
+                plain['brand'] = await brand.get({ plain: true })
+                listProduct.push(plain)
+            }
+            return res.json({
+                code: 200,
+                status: 'OK',
+                totalPage: Math.ceil(count / 7),
+                data: listProduct.reverse()
+            })
         }
-        listProduct.rows.forEach((product) => {
-            product.id_brand = product.id_category = undefined
-        })
-        return res.json({
-            code: 200,
-            status: 'OK',
-            totalPage: Math.ceil(count / 7),
-            data: listProduct.rows.reverse()
-        })
     } catch (err) {
         return res.json({
             code: 500,
