@@ -59,6 +59,7 @@ const addProduct = async (req, res) => {
             })
         }
     } catch (err) {
+        console.log(err)
         if (err.errors) {
             let errors = []
             if (err.length > 1) {
@@ -185,18 +186,12 @@ const getAllProduct = async (req, res) => {
     try {
         const { page } = req.query
         const { count } = await Product.findAndCountAll();
-
         let listProduct = []
         let data;
         if (count <= 7) {
             data = await Product.findAll({
                 limit: 7,
                 offset: 0
-            })
-        } else {
-            data = await Product.findAll({
-                limit: ((count - page * 7) > 0) ? 7 : count % 7,
-                offset: ((count - page * 7) > 0) ? count - page * 7 : 0
             })
             for (var i = 0; i < data.length; i++) {
                 let category = await data[i].getCategory()
@@ -207,13 +202,29 @@ const getAllProduct = async (req, res) => {
                 plain['brand'] = await brand.get({ plain: true })
                 listProduct.push(plain)
             }
-            return res.json({
-                code: 200,
-                status: 'OK',
-                totalPage: Math.ceil(count / 7),
-                data: listProduct.reverse()
+        } else {
+            console.log(count % 7, count - page * 7)
+            data = await Product.findAll({
+                limit: ((count - page * 7) >= 0 ) ? 7 : count % 7,
+                offset: ((count - page * 7) > 0) ? count - page * 7 : 0
             })
+            
+            for (var i = 0; i < data.length; i++) {
+                let category = await data[i].getCategory()
+                let brand = await data[i].getBrand()
+                data[i].id_brand = data[i].id_category = undefined
+                var plain = await data[i].get({ plain: true })
+                plain['category'] = await category.get({ plain: true })
+                plain['brand'] = await brand.get({ plain: true })
+                listProduct.push(plain)
+            }
         }
+        return res.json({
+            code: 200,
+            status: 'OK',
+            totalPage: Math.ceil(count / 7),
+            data: listProduct.reverse()
+        })
     } catch (err) {
         console.log(err)
         return res.json({
@@ -258,18 +269,12 @@ const getAllProductForCustomer = async (req, res) => {
     try {
         const { page } = req.query
         const { count } = await Product.findAndCountAll();
-
         let listProduct = []
         let data;
         if (count <= 7) {
-            data = await Product.findAll({ where: { active: true } }, {
+            data = await Product.findAll({ where : { active : true } },{
                 limit: 7,
                 offset: 0
-            })
-        } else {
-            data = await Product.findAll({ where: { active: true } }, {
-                limit: ((count - page * 7) > 0) ? 7 : count % 7,
-                offset: ((count - page * 7) > 0) ? count - page * 7 : 0
             })
             for (var i = 0; i < data.length; i++) {
                 let category = await data[i].getCategory()
@@ -280,13 +285,29 @@ const getAllProductForCustomer = async (req, res) => {
                 plain['brand'] = await brand.get({ plain: true })
                 listProduct.push(plain)
             }
-            return res.json({
-                code: 200,
-                status: 'OK',
-                totalPage: Math.ceil(count / 7),
-                data: listProduct.reverse()
+        } else {
+            console.log(count % 7, count - page * 7)
+            data = await Product.findAll({ where : { active : true } },{
+                limit: ((count - page * 7) >= 0 ) ? 7 : count % 7,
+                offset: ((count - page * 7) > 0) ? count - page * 7 : 0
             })
+            
+            for (var i = 0; i < data.length; i++) {
+                let category = await data[i].getCategory()
+                let brand = await data[i].getBrand()
+                data[i].id_brand = data[i].id_category = undefined
+                var plain = await data[i].get({ plain: true })
+                plain['category'] = await category.get({ plain: true })
+                plain['brand'] = await brand.get({ plain: true })
+                listProduct.push(plain)
+            }
         }
+        return res.json({
+            code: 200,
+            status: 'OK',
+            totalPage: Math.ceil(count / 7),
+            data: listProduct.reverse()
+        })
     } catch (err) {
         return res.json({
             code: 500,
