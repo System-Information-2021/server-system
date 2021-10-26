@@ -87,7 +87,7 @@ Product.belongsTo(Brand, { foreignKey: 'id_brand', as: 'brand' })
 Category.hasMany(Product, { foreignKey: 'id_category', as: 'products' })
 Product.belongsTo(Category, { foreignKey: 'id_category', as: 'category' })
 
-db.sync({alter : true})
+// db.sync({alter : true})
 
 module.exports = Product;
 
