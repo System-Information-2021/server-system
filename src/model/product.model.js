@@ -34,17 +34,20 @@ const Product = db.define('tbl_products', {
         defaultValue: 0
     },
     description: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: true
     },
     image1: {
         type: DataTypes.STRING,
         allowNull: true,
+        defaultValue : null,
         validate: {
             checkExtension(value) {
-                let [filename, extension] = value.split('.', 2)
-                if (!extensionArr.includes(extension)) {
-                    throw new Error('Invalid image format')
+                if(value !== null) {
+                    let [filename, extension] = value.split('.', 2)
+                    if (!extensionArr.includes(extension)) {
+                        throw new Error('Invalid image format')
+                    }
                 }
             }
         }
@@ -52,11 +55,14 @@ const Product = db.define('tbl_products', {
     image2: {
         type: DataTypes.STRING,
         allowNull: true,
+        defaultValue : null,
         validate: {
             checkExtension(value) {
-                let [filename, extension] = value.split('.', 2)
-                if (!extensionArr.includes(extension)) {
-                    throw new Error('Invalid image format')
+                if(value !== null) {
+                    let [filename, extension] = value.split('.', 2)
+                    if (!extensionArr.includes(extension)) {
+                        throw new Error('Invalid image format')
+                    }
                 }
             }
         }
@@ -64,11 +70,14 @@ const Product = db.define('tbl_products', {
     image3: {
         type: DataTypes.STRING,
         allowNull: true,
+        defaultValue : null,
         validate: {
             checkExtension(value) {
-                let [filename, extension] = value.split('.', 2)
-                if (!extensionArr.includes(extension)) {
-                    throw new Error('Invalid image format')
+                if(value !== null) {
+                    let [filename, extension] = value.split('.', 2)
+                    if (!extensionArr.includes(extension)) {
+                        throw new Error('Invalid image format')
+                    }
                 }
             }
         }
@@ -87,7 +96,7 @@ Product.belongsTo(Brand, { foreignKey: 'id_brand', as: 'brand' })
 Category.hasMany(Product, { foreignKey: 'id_category', as: 'products' })
 Product.belongsTo(Category, { foreignKey: 'id_category', as: 'category' })
 
-// db.sync({alter : true})
+// Product.sync({alter : true})
 
 module.exports = Product;
 

@@ -2,6 +2,7 @@ const Product = require('../model/product.model')
 const Brand = require('../model/brands.model')
 const Category = require('../model/categories.model')
 const path = require('path')
+const fs = require('fs')
 
 const addProduct = async (req, res) => {
     let { id_brand, id_category } = req.body
@@ -26,21 +27,33 @@ const addProduct = async (req, res) => {
                 price,
                 description
             } = req.body
-            console.log(name, price, description)
 
             const productMatch = await Product.findOne({ where: { name: name } })
             if (productMatch === null) {
-                const [{ filename: image1 }, { filename: image2 }, { filename: image3 }] = req.files
-                const product = await Product.create({
+                // const [{ filename: image1 }, { filename: image2 }, { filename: image3 }] = req.files
+                const product =  Product.build({
                     name: name,
                     price: price,
-                    image1: image1,
-                    image2: image2,
-                    image3: image3,
                     description: description,
                     id_brand: brand.id,
                     id_category: category.id
                 })
+                let files = new Array(3).fill(null)
+                req.files.forEach((file, index) => {
+                    files[index] = file.filename
+                })
+                const [image1 , image2 , image3] = files
+                if(image1 !== null) {
+                    product.image1 = image1 
+                }
+                if(image2 !== null) {
+                    product.image2 = image2
+                }
+                if(image3 !== null) {
+                    product.image3 = image3
+                }
+
+                await product.save()
 
                 return res.json({
                     code: 200,
@@ -95,14 +108,24 @@ const getProductById = async (req, res) => {
             where: { id: id },
             include: { all: true }
         })
-        product.id_category = undefined,
+        if(product === null) {
+            return res.json({
+                code : 400,
+                status : 'Bad Request',
+                message : 'Product does not exist'
+            })
+        } else {
+            product.id_category = undefined,
             product.id_brand = undefined
-        return res.json({
-            code: 200,
-            status: 'OK',
-            data: product
-        })
+            return res.json({
+                code: 200,
+                status: 'OK',
+                data: product
+            })
+        }
+
     } catch (err) {
+        console.log(err)
         return res.json({
             code: 500,
             status: 'Internal Error',
@@ -116,6 +139,17 @@ const deleteProduct = async (req, res) => {
         const id_product = req.params.id;
         const existProduct = await Product.findByPk(id_product)
         if (existProduct !== null) {
+            const url = path.resolve('./uploads')
+            const { image1 , image2 , image3 } = existProduct
+            if(image1 !== null) {
+                fs.unlinkSync(url.concat('\\', existProduct.image1))
+            }
+            if(image2 !== null) {
+                fs.unlinkSync(url.concat('\\', existProduct.image2))
+            }
+            if(image3 !== null) {
+                fs.unlinkSync(url.concat('\\', existProduct.image3))
+            }
             await existProduct.destroy()
             return res.json({
                 code: 200,
