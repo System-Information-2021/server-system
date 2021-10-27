@@ -108,14 +108,24 @@ const getProductById = async (req, res) => {
             where: { id: id },
             include: { all: true }
         })
-        product.id_category = undefined,
+        if(product === null) {
+            return res.json({
+                code : 400,
+                status : 'Bad Request',
+                message : 'Product does not exist'
+            })
+        } else {
+            product.id_category = undefined,
             product.id_brand = undefined
-        return res.json({
-            code: 200,
-            status: 'OK',
-            data: product
-        })
+            return res.json({
+                code: 200,
+                status: 'OK',
+                data: product
+            })
+        }
+
     } catch (err) {
+        console.log(err)
         return res.json({
             code: 500,
             status: 'Internal Error',
