@@ -142,13 +142,13 @@ const deleteProduct = async (req, res) => {
             const url = path.resolve('./uploads')
             const { image1 , image2 , image3 } = existProduct
             if(image1 !== null) {
-                fs.unlinkSync(url.concat('\\', existProduct.image1))
+                fs.unlinkSync(url.concat('/', existProduct.image1))
             }
             if(image2 !== null) {
-                fs.unlinkSync(url.concat('\\', existProduct.image2))
+                fs.unlinkSync(url.concat('/', existProduct.image2))
             }
             if(image3 !== null) {
-                fs.unlinkSync(url.concat('\\', existProduct.image3))
+                fs.unlinkSync(url.concat('/', existProduct.image3))
             }
             await existProduct.destroy()
             return res.json({
