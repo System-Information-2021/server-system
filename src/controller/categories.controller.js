@@ -216,11 +216,29 @@ const getAllProductByCategory = async (req, res) => {
     }
 }
 
+const selectCategoryOption = async (req, res) => {
+    try {
+        return res.json({
+            code : 200,
+            status : 'OK',
+            data : await Category.findAll()
+        })
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code : 500,
+            status : 'Interal Error',
+            message : 'Something went wrong'
+        })
+    }
+}
+
 module.exports = {
     addCategory,
     getCategoryById,
     updateCategory,
     deleteCategory,
     getAllCategories,
-    getAllProductByCategory
+    getAllProductByCategory,
+    selectCategoryOption
 }

@@ -217,6 +217,22 @@ const getAllProductByBrand = async (req, res) => {
     }
 }
 
+const selectBrandOption = async (req, res) => {
+    try {
+        return res.json({
+            code : 200,
+            status : 'OK',
+            data : await Brand.findAll()
+        })
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code : 500,
+            status : 'Interal Error',
+            message : 'Something went wrong'
+        })
+    }
+}
 
 module.exports = {
     addBrand,
@@ -224,5 +240,6 @@ module.exports = {
     updateBrand,
     deleteBrand,
     getAllBrand,
-    getAllProductByBrand
+    getAllProductByBrand,
+    selectBrandOption
 }
