@@ -6,7 +6,7 @@ const fs = require('fs')
 
 const addProduct = async (req, res) => {
     let { id_brand, id_category } = req.body
-    console.log("brand", id_brand, "category", id_category)
+    // console.log("brand", id_brand, "category", id_category)
     brand_id = parseInt(id_brand)
     category_id = parseInt(id_category)
 
@@ -277,13 +277,15 @@ const activeProduct = async (req, res) => {
     try {
         const { id_product } = req.params
 
+        const { value } = req.body
+
         const product = await Product.findByPk(id_product)
 
         if (product !== null) {
-            product.update({ active: true })
+            product.update({ active: value })
             return res.json({
                 code: 200,
-                status: 'Actived',
+                status: 'OK',
                 message: 'Successfully'
             })
         } else {
