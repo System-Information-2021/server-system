@@ -1,8 +1,9 @@
 const Product = require('../model/product.model')
 const Brand = require('../model/brands.model')
 const Category = require('../model/categories.model')
-const path = require('path')
-const fs = require('fs')
+const cloudinary = require('../../utils/cloud.config')
+
+const extensionArr = ['jpg', 'jpeg', 'png']
 
 const addProduct = async (req, res) => {
     let { id_brand, id_category } = req.body
@@ -25,32 +26,55 @@ const addProduct = async (req, res) => {
             const {
                 name,
                 price,
-                description
+                description,
+                gender
             } = req.body
 
             const productMatch = await Product.findOne({ where: { name: name } })
             if (productMatch === null) {
-                // const [{ filename: image1 }, { filename: image2 }, { filename: image3 }] = req.files
+
                 const product =  Product.build({
                     name: name,
                     price: price,
                     description: description,
+                    gender : gender,
                     id_brand: brand.id,
                     id_category: category.id
                 })
                 let files = new Array(3).fill(null)
+                let types = new Array(3).fill(null)
                 req.files.forEach((file, index) => {
                     files[index] = file.filename
+                    types[index] = file.mimetype
                 })
                 const [image1 , image2 , image3] = files
-                if(image1 !== null) {
-                    product.image1 = image1 
+                const [ex1,mimetype1] = types[0].split('/', 2)
+                if(image1 !== null && extensionArr.includes(mimetype1)) {
+                    await cloudinary.v2.uploader.upload(req.files[0].path,{ tags : product.name },(err, result)=> {
+                        if(err) {
+                            console.log(err)
+                        }
+                        // console.log(result)
+                        product.image1 = result.url; 
+                    })
                 }
-                if(image2 !== null) {
-                    product.image2 = image2
+                const [ex2,mimetype2] = types[1].split('/', 2)
+                if(image2 !== null  && extensionArr.includes(mimetype2)) {
+                    await cloudinary.v2.uploader.upload(req.files[1].path,{ tags : product.name },(err, result)=> {
+                        if(err) {
+                            console.log(err)
+                        }
+                        product.image2 = result.url; 
+                    })
                 }
-                if(image3 !== null) {
-                    product.image3 = image3
+                const [ex3,mimetype3] = types[2].split('/', 2)
+                if(image3 !== null  && extensionArr.includes(mimetype3)) {
+                    await cloudinary.v2.uploader.upload(req.files[2].path,{ tags : product.name },(err, result)=> {
+                        if(err) {
+                            console.log(err)
+                        }
+                        product.image3 = result.url; 
+                    })
                 }
 
                 await product.save()
@@ -139,17 +163,11 @@ const deleteProduct = async (req, res) => {
         const id_product = req.params.id;
         const existProduct = await Product.findByPk(id_product)
         if (existProduct !== null) {
-            const url = path.resolve('./uploads')
-            const { image1 , image2 , image3 } = existProduct
-            if(image1 !== null) {
-                fs.unlinkSync(url.concat('/', existProduct.image1))
-            }
-            if(image2 !== null) {
-                fs.unlinkSync(url.concat('/', existProduct.image2))
-            }
-            if(image3 !== null) {
-                fs.unlinkSync(url.concat('/', existProduct.image3))
-            }
+            await cloudinary.v2.api.delete_resources_by_tag(existProduct.name, (err,result) => {
+                if(err) {
+                    console.log(err)
+                }
+            });
             await existProduct.destroy()
             return res.json({
                 code: 200,
