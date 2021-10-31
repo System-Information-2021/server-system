@@ -2,7 +2,8 @@ const { DataTypes } = require('sequelize')
 const db = require('../../utils/db');
 const Brand = require('../model/brands.model')
 const Category = require('../model/categories.model')
-const extensionArr = ['jpg', 'jpeg', 'png']
+
+const genderArr = ['male', 'female']
 
 const Product = db.define('tbl_products', {
     id: {
@@ -33,6 +34,19 @@ const Product = db.define('tbl_products', {
         allowNull: false,
         defaultValue: 0
     },
+    gender : {
+        type : DataTypes.STRING,
+        allowNull : false,
+        validate : {
+            notEmpty : { msg : 'Gender is required' },
+            notNull : { msg : 'Gender is required' },
+            isGender(value) {
+                if(typeof value === 'string' && !genderArr.includes(value.toLowerCase())) {
+                    throw new Error('This is not the gender')
+                }
+            }
+        }
+    },
     description: {
         type: DataTypes.TEXT,
         allowNull: true
@@ -40,47 +54,17 @@ const Product = db.define('tbl_products', {
     image1: {
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue : null,
-        validate: {
-            checkExtension(value) {
-                if(value !== null) {
-                    let [filename, extension] = value.split('.', 2)
-                    if (!extensionArr.includes(extension)) {
-                        throw new Error('Invalid image format')
-                    }
-                }
-            }
-        }
+        defaultValue : null
     },
     image2: {
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue : null,
-        validate: {
-            checkExtension(value) {
-                if(value !== null) {
-                    let [filename, extension] = value.split('.', 2)
-                    if (!extensionArr.includes(extension)) {
-                        throw new Error('Invalid image format')
-                    }
-                }
-            }
-        }
+        defaultValue : null
     },
     image3: {
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue : null,
-        validate: {
-            checkExtension(value) {
-                if(value !== null) {
-                    let [filename, extension] = value.split('.', 2)
-                    if (!extensionArr.includes(extension)) {
-                        throw new Error('Invalid image format')
-                    }
-                }
-            }
-        }
+        defaultValue : null
     },
     active: {
         type: DataTypes.BOOLEAN,
@@ -96,7 +80,7 @@ Product.belongsTo(Brand, { foreignKey: 'id_brand', as: 'brand' })
 Category.hasMany(Product, { foreignKey: 'id_category', as: 'products' })
 Product.belongsTo(Category, { foreignKey: 'id_category', as: 'category' })
 
-// Product.sync({alter : true})
+Product.sync({alter : true})
 
 module.exports = Product;
 
