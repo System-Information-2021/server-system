@@ -22,5 +22,6 @@ products.hasMany(order_detail,{
 orders.hasMany(order_detail,{
     foreignKey: "id_order"
 })
+order_detail.sync({alter : true})
 
 module.exports= order_detail

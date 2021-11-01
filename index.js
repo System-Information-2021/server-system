@@ -8,7 +8,6 @@ const app = express()
 require('dotenv').config()
 
 
-
 const { authorization } = require('./src/auth/auth.middleware')
 const serviceRoute = require('./src/route/login.route')
 // cor
@@ -22,6 +21,7 @@ const categoriesRoute = require('./src/route/categories.route')
 const brandRoute= require('./src/route/brands.route')
 const productRoute = require('./src/route/products.route')
 const customerRoute = require('./src/route/customer.route')
+const cartRoute= require('./src/route/cart.route')
 
 // Use middleware 
 app.use(bodyParser.json()) // for parsing application/json
@@ -42,8 +42,11 @@ app.use('/customer', customerRoute)
 
 app.use("/uploads", express.static(path.resolve(__dirname, 'uploads')));
 
+app.use('/cart',cartRoute);
+
 app.listen(process.env.PORT, async () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)
 })
+
 
 
