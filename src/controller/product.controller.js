@@ -2,6 +2,7 @@ const Product = require('../model/product.model')
 const Brand = require('../model/brands.model')
 const Category = require('../model/categories.model')
 const cloudinary = require('../../utils/cloud.config')
+const db = require('../../utils/db')
 
 const extensionArr = ['jpg', 'jpeg', 'png']
 
@@ -33,11 +34,11 @@ const addProduct = async (req, res) => {
             const productMatch = await Product.findOne({ where: { name: name } })
             if (productMatch === null) {
 
-                const product =  Product.build({
+                const product = Product.build({
                     name: name,
                     price: price,
                     description: description,
-                    gender : gender,
+                    gender: gender,
                     id_brand: brand.id,
                     id_category: category.id
                 })
@@ -47,33 +48,33 @@ const addProduct = async (req, res) => {
                     files[index] = file.filename
                     types[index] = file.mimetype
                 })
-                const [image1 , image2 , image3] = files
-                const [ex1,mimetype1] = types[0].split('/', 2)
-                if(image1 !== null && extensionArr.includes(mimetype1)) {
-                    await cloudinary.v2.uploader.upload(req.files[0].path,{ tags : product.name },(err, result)=> {
-                        if(err) {
+                const [image1, image2, image3] = files
+                const [ex1, mimetype1] = types[0].split('/', 2)
+                if (image1 !== null && extensionArr.includes(mimetype1)) {
+                    await cloudinary.v2.uploader.upload(req.files[0].path, { tags: product.name }, (err, result) => {
+                        if (err) {
                             console.log(err)
                         }
                         // console.log(result)
-                        product.image1 = result.url; 
+                        product.image1 = result.url;
                     })
                 }
-                const [ex2,mimetype2] = types[1].split('/', 2)
-                if(image2 !== null  && extensionArr.includes(mimetype2)) {
-                    await cloudinary.v2.uploader.upload(req.files[1].path,{ tags : product.name },(err, result)=> {
-                        if(err) {
+                const [ex2, mimetype2] = types[1].split('/', 2)
+                if (image2 !== null && extensionArr.includes(mimetype2)) {
+                    await cloudinary.v2.uploader.upload(req.files[1].path, { tags: product.name }, (err, result) => {
+                        if (err) {
                             console.log(err)
                         }
-                        product.image2 = result.url; 
+                        product.image2 = result.url;
                     })
                 }
-                const [ex3,mimetype3] = types[2].split('/', 2)
-                if(image3 !== null  && extensionArr.includes(mimetype3)) {
-                    await cloudinary.v2.uploader.upload(req.files[2].path,{ tags : product.name },(err, result)=> {
-                        if(err) {
+                const [ex3, mimetype3] = types[2].split('/', 2)
+                if (image3 !== null && extensionArr.includes(mimetype3)) {
+                    await cloudinary.v2.uploader.upload(req.files[2].path, { tags: product.name }, (err, result) => {
+                        if (err) {
                             console.log(err)
                         }
-                        product.image3 = result.url; 
+                        product.image3 = result.url;
                     })
                 }
 
@@ -132,11 +133,11 @@ const getProductById = async (req, res) => {
             where: { id: id },
             include: { all: true }
         })
-        if(product === null) {
+        if (product === null) {
             return res.json({
-                code : 400,
-                status : 'Bad Request',
-                message : 'Product does not exist'
+                code: 400,
+                status: 'Bad Request',
+                message: 'Product does not exist'
             })
         } else {
             product.id_category = undefined,
@@ -163,8 +164,8 @@ const deleteProduct = async (req, res) => {
         const id_product = req.params.id;
         const existProduct = await Product.findByPk(id_product)
         if (existProduct !== null) {
-            await cloudinary.v2.api.delete_resources_by_tag(existProduct.name, (err,result) => {
-                if(err) {
+            await cloudinary.v2.api.delete_resources_by_tag(existProduct.name, (err, result) => {
+                if (err) {
                     console.log(err)
                 }
             });
@@ -261,10 +262,10 @@ const getAllProduct = async (req, res) => {
         } else {
             console.log(count % 7, count - page * 7)
             data = await Product.findAll({
-                limit: ((count - page * 7) >= 0 ) ? 7 : count % 7,
+                limit: ((count - page * 7) >= 0) ? 7 : count % 7,
                 offset: ((count - page * 7) > 0) ? count - page * 7 : 0
             })
-            
+
             for (var i = 0; i < data.length; i++) {
                 let category = await data[i].getCategory()
                 let brand = await data[i].getBrand()
@@ -330,7 +331,7 @@ const getAllProductForCustomer = async (req, res) => {
         let listProduct = []
         let data;
         if (count <= 7) {
-            data = await Product.findAll({ where : { active : true } },{
+            data = await Product.findAll({ where: { active: true } }, {
                 limit: 7,
                 offset: 0
             })
@@ -345,11 +346,11 @@ const getAllProductForCustomer = async (req, res) => {
             }
         } else {
             console.log(count % 7, count - page * 7)
-            data = await Product.findAll({ where : { active : true } },{
-                limit: ((count - page * 7) >= 0 ) ? 7 : count % 7,
+            data = await Product.findAll({ where: { active: true } }, {
+                limit: ((count - page * 7) >= 0) ? 7 : count % 7,
                 offset: ((count - page * 7) > 0) ? count - page * 7 : 0
             })
-            
+
             for (var i = 0; i < data.length; i++) {
                 let category = await data[i].getCategory()
                 let brand = await data[i].getBrand()
@@ -375,6 +376,60 @@ const getAllProductForCustomer = async (req, res) => {
     }
 }
 
+const filterProduct = async (req, res) => {
+    try {
+        const { page, categoryId, brandId, gender } = req.query
+        let sqlString = `SELECT * FROM tbl_products `
+        let sqlWhere = ''
+        if (brandId) {
+            sqlWhere = sqlWhere.concat(' AND ', `id_brand = ${brandId}`)
+        }
+        if (categoryId) {
+            sqlWhere = sqlWhere.concat(' AND ', `id_category = ${categoryId}`)
+        }
+        if (gender) {
+            sqlWhere = sqlWhere.concat(' AND ', `gender = '${gender}'`)
+        }
+        if (sqlWhere.indexOf('AND') === 1) {
+            sqlWhere = sqlWhere.slice(4)
+            sqlWhere = 'WHERE'.concat('',sqlWhere)
+        }
+        sqlString = sqlString.concat('', sqlWhere.concat(' AND ',`active = ${true}`))
+
+        console.log(sqlString)
+        const data = await db.query(sqlString, {
+            model : Product,
+            mapToModel : true
+        })
+        data.slice((page - 1) * 7, page * 7)
+        let listProduct = []
+        for (var i = 0; i < data.length; i++) {
+            let category = await data[i].getCategory()
+            let brand = await data[i].getBrand()
+            data[i].id_brand = data[i].id_category = undefined
+            var plain = await data[i].get({ plain: true })
+            plain['category'] = await category.get({ plain: true })
+            plain['brand'] = await brand.get({ plain: true })
+            listProduct.push(plain)
+        }
+        return res.json({
+            code : 200,
+            status : 'OK',
+            totalPage : Math.ceil(listProduct.length / 7),
+            data : listProduct.reverse()
+        })
+
+
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: 'Something went wrong'
+        })
+    }
+}
+
 module.exports = {
     addProduct,
     getProductById,
@@ -382,5 +437,6 @@ module.exports = {
     updateProductInfo,
     getAllProduct,
     activeProduct,
-    getAllProductForCustomer
+    getAllProductForCustomer,
+    filterProduct
 }
