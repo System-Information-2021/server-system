@@ -73,7 +73,7 @@ const Product = db.define('tbl_products', {
     }
 
 })
-// add foreign key
+//Add foreign key
 Brand.hasMany(Product, { foreignKey: 'id_brand', as: 'products' })
 Product.belongsTo(Brand, { foreignKey: 'id_brand', as: 'brand' })
 
