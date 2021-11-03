@@ -40,13 +40,13 @@ app.use('/product', authorization ,productRoute )
 
 app.use('/customer', customerRoute)
 
-app.use("/uploads", express.static(path.resolve(__dirname, 'uploads')));
-
 app.use('/cart',cartRoute);
 
 app.listen(process.env.PORT, async () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)
 })
+
+
 
 
 

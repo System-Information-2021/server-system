@@ -176,7 +176,7 @@ const register = async (req, res, next) => {
 };
 
 const authentication = async (req, res) => {
-    console.log(req.session.cart);
+   
     let { email, password } = req.body;
     if (!email || !password) {
         return res.json({
