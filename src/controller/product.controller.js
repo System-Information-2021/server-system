@@ -344,10 +344,10 @@ const getAllProductForCustomer = async (req, res) => {
             mapToModel: true
         })
         const count = data.length
-        if(page) {
+        if (page) {
             let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
             let numberProduct = ((count - page * 7) >= 0) ? 7 : count % 7
-            data = data.slice(offset,offset + numberProduct)
+            data = data.slice(offset, offset + numberProduct)
         }
         let listProduct = []
         for (var i = 0; i < data.length; i++) {
@@ -375,6 +375,67 @@ const getAllProductForCustomer = async (req, res) => {
     }
 }
 
+const searchProduct = async (req, res) => {
+    try {
+        const searchKey = req.query.key
+        let data = await Product.findAll({
+            where: { active: true },
+            include: ['category', 'brand']
+        })
+
+        data = data.filter(product => {
+            return product.name.toLowerCase().search(searchKey.toLowerCase()) !== -1
+        })
+
+        let listProduct = []
+        for (var i = 0; i < data.length; i++) {
+            var plain = await data[i].get({ plain: true })
+            plain['category'] = await data[i].getCategory()
+            plain['brand'] = await data[i].getBrand()
+            delete plain['id_category'];
+            delete plain['id_brand'];
+            listProduct.push(plain)
+        }
+
+        let filters = req.query;
+        delete filters.key
+        if (typeof req.query !== {}) {
+
+            listProduct = listProduct.filter(product => {
+                let isValid = true;
+                for (key in filters) {
+                    // console.log(key, product[key], filters[key]);
+                    isValid = isValid && product[key].name.toLowerCase() == filters[key].toLowerCase();
+                }
+                return isValid;
+            });
+        }
+        
+        if (filters.page) {
+            let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
+            let numberProduct = ((count - page * 7) >= 0) ? 7 : count % 7
+            listProduct = listProduct.slice(offset, offset + numberProduct)
+        }
+        return res.json({
+            code: 200,
+            status: 'OK',
+            totalPage: Math.ceil(listProduct.length / 7),
+            queryWord: searchKey,
+            keyFilter: (filters !== {}) ? filters : null,
+            quantityMatch : listProduct.length,
+            data: listProduct.reverse()
+        })
+
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: 'Something went wrong'
+        })
+    }
+}
+
 module.exports = {
     addProduct,
     getProductById,
@@ -382,5 +443,6 @@ module.exports = {
     updateProductInfo,
     getAllProduct,
     activeProduct,
-    getAllProductForCustomer
+    getAllProductForCustomer,
+    searchProduct
 }
