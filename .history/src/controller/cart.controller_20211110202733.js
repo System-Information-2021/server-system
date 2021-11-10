@@ -378,6 +378,6 @@ module.exports = {
     updateStatus,
     filterOrder,
     orderdetail,
-    cancel,
+    cancel
     getOrderbyUser
 }
