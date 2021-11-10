@@ -2,8 +2,23 @@
 const Product = require('../model/product.model')
 const Order = require('../model/order.model')
 const Order_detail= require('../model/order_detail.model')
+const User = require('../model/user.model')
+const Op = require('Sequelize').Op
 
 const order= async(req,res)=>{
+    var token =await req.headers.token;
+    const user = await User.findOne({
+        where:{
+            token : token 
+        }
+    })
+    if(user=== null){
+        return res.json({
+            code: 400,
+            status: 'Bad Request',
+            message: 'user invalided'
+        })
+    }
     let{
         firstname,
         lastname,
@@ -39,7 +54,8 @@ const order= async(req,res)=>{
            numberphone: numberphone,
            total_price:total_price,
            total_qty: total_qty,
-           status: 'chờ tiếp nhận',
+           status: 'Pending',
+           id_customer: user.id
         })
         await order.save()
         for (let i = 0; i < data.length; i++) {
@@ -61,8 +77,8 @@ const order= async(req,res)=>{
         }
         res.json({
             code: 200,
-            status: 'successfully',
-            message: "Dat hang thanh cong"
+            status: 'Created',
+            message: "Order successfully"
         })
     } catch (err) {
         console.log(err)
@@ -94,19 +110,12 @@ const getcart =async(req,res)=>{
     try{
         const { page } = req.query
         const { count } = await Order.findAndCountAll();
-        //let listOrder = [];
-        console.log(page);
-        console.log(count);
-        console.log(count % 7, count - page * 7)
         if (count <= 7) {
             data = await Order.findAll({
                 limit: 7,
                 offset: 0
             })
-        //listOrder.push(data);
-        console.log(data)
         }else{
-            console.log(count % 7, count - page * 7)
             data = await Order.findAll({
                 limit: ((count - page * 7) >= 0) ? 7 : count % 7,
                 offset: ((count - page * 7) > 0) ? count - page * 7 : 0
@@ -129,29 +138,18 @@ const getcart =async(req,res)=>{
 }  
 const updateStatus = async(req,res)=>{
     try{
-        if (!req.params.id) {
-            return res.json({
-                code: 400,
-                status: 'Bad Request',
-                message: 'have no this order'
-            })
+        const st =parseInt( req.params.st);
+        const id = req.params.id;
+        let status;
+        switch(st){
+            case 1: status = "Pending"; break;
+            case 2: status = "Received"; break;
+            case 3: status = "Delivering"; break;
+            case 4: status = "Delivered"; break;
+            case 5: status = "Cancel"; break;
         }
-
-        const id = req.params.id
-
-        const existOrder = await Order.findByPk(id)
-        
-
+        const existOrder = await Order.findByPk(id)        
         if (existOrder !== null) {
-            if (!req.body.status) {
-                return res.json({
-                    code: 400,
-                    status: 'Bad Request',
-                    message: 'have no this order'
-                })
-            }
-            let status = req.body.status
-            status= status.charAt(0).toUpperCase() + status.slice(1);
             const newBrand = await Order.update({
                     status: status
             },
@@ -161,15 +159,15 @@ const updateStatus = async(req,res)=>{
             )
             return res.json({
                 code: 200,
-                status : 'Successfully',
+                status: 'Updated',
+                message: 'update successfully'
             
             })
-        
         } else if(existOrder === null) {
             return res.json({
                 code : 400,
                 status : 'Not Found',
-                message : 'Brand id is not found'
+                message : 'This order is not found'
             })
         }
     }catch (err) {
@@ -185,8 +183,15 @@ const updateStatus = async(req,res)=>{
 const filterOrder =async(req,res)=>{
     try{
         const { page} = req.query
-        const status = req.body.status
-        console.log(status)
+        let st = parseInt( req.params.status)
+        let status;
+        switch(st){
+            case 1: status = "Pending"; break;
+            case 2: status = "Received"; break;
+            case 3: status = "Delivering"; break;
+            case 4: status = "Delivered"; break;
+            case 5: status = "Cancel"; break;
+        }
         const order = await Order.findAll({
             where: {
             status: status
@@ -229,16 +234,7 @@ const filterOrder =async(req,res)=>{
 
 const orderdetail =async(req,res)=>{
     try{
-
-   
         const detail = req.params.id;
-        if(!detail || isNaN(detail)){
-            return res.json({
-                code: 400,
-                status: 'Bad Request',
-                message: 'fail '
-            })
-        }
         const order = await Order.findByPk(detail);
         const detailOrder = await Order_detail.findAll({
             where: {
@@ -252,11 +248,120 @@ const orderdetail =async(req,res)=>{
                 message: 'fail'
             })
         }
+        var orderr = new Array();
+        var detaill= new Array();
+        console.log(detailOrder.length);
+        var plain = await order.get({plain: true})   
+        for (var i = 0; i < detailOrder.length; i++) {
+            var plain1 = await detailOrder[i].get({plain: true})
+            plain1['product'] = await Product.findByPk(plain1.id_product);    
+            detaill.push(plain1)
+            detailOrder[i].id_order =detailOrder[i].id_product = undefined
+        }
+            plain['detail'] = detaill
+            orderr.push(order)
         res.json({
             code: 200,
             message: 'successfully',
-            order: order,
-            datail: detailOrder
+            order: orderr,
+        })
+    }catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: 'Something went wrong'
+        })
+    }
+}
+const cancel = async(req,res)=>{
+    try{
+            const id = req.params.id;
+            const order = await Order.findByPk(id);
+            if(!order ){
+                return res.json({
+                    code: 400,
+                    status: 'Bad Request',
+                    message: 'failll'
+                })
+            }
+            if(order.status== 'Delivered'|| order.status=='Delivering'|| order.status=='Cancel'){
+                return res.json({
+                    code: 400,
+                    status: 'Bad Request',
+                    message: 'can not cancel this order'
+                })
+            }
+            await Order.update({
+                    status: 'Cancel'
+            },
+                {
+                    where: { id_order : id }
+                }
+            )
+            return res.json({
+            code: 200,
+            status : 'cancel',
+            message: 'cancel succesfully'
+        
+        })
+    }catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: 'Something went wrong'
+        })
+    }
+}
+
+const getOrderbyUser = async(req,res)=>{
+    try{
+        const { page} = req.query
+        var token =await req.headers.token;
+        const user = await User.findOne({
+            where:{
+                token : token 
+            }
+        })
+        const getOrder = await Order.findAll({
+            where:{
+                id_customer : user.id,
+                //status: 'Pending'|| 'Received' || 'Delivering' || 'Delivered'
+                status: {
+                    [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
+                }
+            }
+        })
+        if (getOrder.length <= 7) {
+            data = await Order.findAll({
+                limit: 7,
+                offset: 0,
+                where:{
+                    id_customer : user.id,
+                    status: {
+                        [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
+                    }
+                }
+            })
+        }
+        else{
+            data = await Order.findAll({
+                limit: ((getOrder.length - page * 7) >= 0) ? 7 : getOrder.length % 7,
+                offset: ((getOrder.length - page * 7) > 0) ? getOrder.length - page * 7 : 0,
+                where:{
+                    id_customer : user.id,
+                    status: {
+                        [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
+                    }
+                }
+            })
+        }
+        res.json({
+            code: 200,
+            status: 'OK',
+            totalPage: Math.ceil(getOrder.length / 7),
+            data: data.reverse()
         })
     }catch (err) {
         console.log(err)
@@ -272,5 +377,7 @@ module.exports = {
     getcart,
     updateStatus,
     filterOrder,
-    orderdetail
+    orderdetail,
+    cancel,
+    getOrderbyUser
 }

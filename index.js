@@ -40,7 +40,7 @@ app.use('/product', authorization ,productRoute )
 
 app.use('/customer', customerRoute)
 
-app.use('/cart',cartRoute);
+app.use('/cart',authorization,cartRoute);
 
 app.listen(process.env.PORT, async () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)

@@ -48,12 +48,12 @@ const order = db.define('tbl_orders', {
     },
 
 })
-    // foreignKey: customer
-// user.hasMany(order, { foreignKey: 'id_customer' })
-// order.belongsTo(user, { foreignKey: 'id_customer' })
-//     //  foreignKey: staff
-// user.hasMany(order, { foreignKey: 'id_staff' })
-// order.belongsTo(user, { foreignKey: 'id_staff' })
+  //  foreignKey: customer
+user.hasMany(order, { foreignKey: 'id_customer' })
+order.belongsTo(user, { foreignKey: 'id_customer' })
+    //  foreignKey: staff
+user.hasMany(order, { foreignKey: 'id_staff' })
+order.belongsTo(user, { foreignKey: 'id_staff' })
 
-order.sync({alter : true})
+// order.sync({alter : true})
 module.exports= order
