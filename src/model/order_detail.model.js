@@ -18,9 +18,13 @@ const order_detail = db.define('tbl_orders_detail', {
 products.hasMany(order_detail,{
     foreignKey: "id_product"
 })
+order_detail.belongsTo(products, { foreignKey: 'id_product' })
 
 orders.hasMany(order_detail,{
     foreignKey: "id_order"
 })
+order_detail.belongsTo(orders, { foreignKey: 'id_order' })
+
+order_detail.sync({alter : true})
 
 module.exports= order_detail
