@@ -10,5 +10,5 @@ router.get('/update/:id/:st',controller.updateStatus);
 router.get('/filter/:status',controller.filterOrder)
 router.get('/detail/:id',controller.orderdetail)
 router.get('/cancel/:id',controller.cancel)
-router.get('/getorderbyuser',controller.getOrderbyUser)
+// router.get('/getorderbyuser',controller.getOrderbyUser)
 module.exports = router;

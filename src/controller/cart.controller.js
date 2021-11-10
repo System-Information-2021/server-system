@@ -3,7 +3,7 @@ const Product = require('../model/product.model')
 const Order = require('../model/order.model')
 const Order_detail= require('../model/order_detail.model')
 const User = require('../model/user.model')
-const Op = require('Sequelize').Op
+// const Op = require('Sequelize').Op
 
 const order= async(req,res)=>{
     var token =await req.headers.token;
@@ -315,69 +315,69 @@ const cancel = async(req,res)=>{
     }
 }
 
-const getOrderbyUser = async(req,res)=>{
-    try{
-        const { page} = req.query
-        var token =await req.headers.token;
-        const user = await User.findOne({
-            where:{
-                token : token 
-            }
-        })
-        const getOrder = await Order.findAll({
-            where:{
-                id_customer : user.id,
-                //status: 'Pending'|| 'Received' || 'Delivering' || 'Delivered'
-                status: {
-                    [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
-                }
-            }
-        })
-        if (getOrder.length <= 7) {
-            data = await Order.findAll({
-                limit: 7,
-                offset: 0,
-                where:{
-                    id_customer : user.id,
-                    status: {
-                        [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
-                    }
-                }
-            })
-        }
-        else{
-            data = await Order.findAll({
-                limit: ((getOrder.length - page * 7) >= 0) ? 7 : getOrder.length % 7,
-                offset: ((getOrder.length - page * 7) > 0) ? getOrder.length - page * 7 : 0,
-                where:{
-                    id_customer : user.id,
-                    status: {
-                        [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
-                    }
-                }
-            })
-        }
-        res.json({
-            code: 200,
-            status: 'OK',
-            totalPage: Math.ceil(getOrder.length / 7),
-            data: data.reverse()
-        })
-    }catch (err) {
-        console.log(err)
-        return res.json({
-            code: 500,
-            status: 'Internal Error',
-            message: 'Something went wrong'
-        })
-    }
-}
+// const getOrderbyUser = async(req,res)=>{
+//     try{
+//         const { page} = req.query
+//         var token =await req.headers.token;
+//         const user = await User.findOne({
+//             where:{
+//                 token : token 
+//             }
+//         })
+//         const getOrder = await Order.findAll({
+//             where:{
+//                 id_customer : user.id,
+//                 //status: 'Pending'|| 'Received' || 'Delivering' || 'Delivered'
+//                 status: {
+//                     [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
+//                 }
+//             }
+//         })
+//         if (getOrder.length <= 7) {
+//             data = await Order.findAll({
+//                 limit: 7,
+//                 offset: 0,
+//                 where:{
+//                     id_customer : user.id,
+//                     status: {
+//                         [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
+//                     }
+//                 }
+//             })
+//         }
+//         else{
+//             data = await Order.findAll({
+//                 limit: ((getOrder.length - page * 7) >= 0) ? 7 : getOrder.length % 7,
+//                 offset: ((getOrder.length - page * 7) > 0) ? getOrder.length - page * 7 : 0,
+//                 where:{
+//                     id_customer : user.id,
+//                     status: {
+//                         [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
+//                     }
+//                 }
+//             })
+//         }
+//         res.json({
+//             code: 200,
+//             status: 'OK',
+//             totalPage: Math.ceil(getOrder.length / 7),
+//             data: data.reverse()
+//         })
+//     }catch (err) {
+//         console.log(err)
+//         return res.json({
+//             code: 500,
+//             status: 'Internal Error',
+//             message: 'Something went wrong'
+//         })
+//     }
+// }
 module.exports = {
     order,
     getcart,
     updateStatus,
     filterOrder,
     orderdetail,
-    cancel,
-    getOrderbyUser
+    cancel
+    // getOrderbyUser
 }
