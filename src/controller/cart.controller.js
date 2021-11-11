@@ -91,36 +91,7 @@ const order= async(req,res)=>{
     }
 
 }
-const getcart = async (req, res) => {
-    try {
-        const { page } = req.query
-        const { count } = await Order.findAndCountAll();
-        if (count <= 7) {
-            data = await Order.findAll({
-                limit: 7,
-                offset: 0
-            })
-        } else {
-            data = await Order.findAll({
-                limit: ((count - page * 7) >= 0) ? 7 : count % 7,
-                offset: ((count - page * 7) > 0) ? count - page * 7 : 0
-            })
-        }
-        return res.json({
-            code: 200,
-            status: 'OK',
-            totalPage: Math.ceil(count / 7),
-            data: data.reverse()
-        })
-    } catch (err) {
-        console.log(err)
-        return res.json({
-            code: 500,
-            status: 'Internal Error',
-            message: 'Something went wrong'
-        })
-    }
-}
+
 const updateStatus = async (req, res) => {
     try {
         const st = parseInt(req.params.st);
@@ -280,14 +251,40 @@ const getOrderbyUser = async(req,res)=>{
     try{
         const { page} = req.query
         var id_user =await req.params.id_user;
-        const getOrder = await Order.findAll({
-            where:{
-                id_customer :id_user,
-                status: {
-                    [Op.or]: ['pending' ,'received', 'delivering' , 'delivered', 'cancel' ]
+
+        let st = parseInt(req.params.status)
+        let status;
+        switch(st){
+            case 1: status = "pending"; break;
+            case 2: status = "received"; break;
+            case 3: status = "delivering"; break;
+            case 4: status = "delivered"; break;
+            case 5: status = "cancel"; break;
+        }
+
+        let getOrder
+        if(st == 1 || st==2 || st==3 || st==4 || st==5){
+            getOrder = await Order.findAll({
+                where: {
+                    id_customer :id_user,
+                    status: status
                 }
-            }
-        }); 
+            });
+         }
+        if(st == 6){
+            getOrder = await Order.findAll({
+                where:{
+                    id_customer :id_user,         
+                    }
+            });
+        }
+
+        // const getOrder = await Order.findAll({
+        //     where:{
+        //         id_customer :id_user,
+                
+        //     }
+        // }); 
         let listOrder = [];
         for(let i= 0 ; i<getOrder.length; i++){
             let plain = await getOrder[i].get({ plain : true});
@@ -318,7 +315,7 @@ const getOrderbyUser = async(req,res)=>{
         res.json({
             code: 200,
             status: 'OK',
-            totalPage: Math.ceil(listOrder.length / 7),
+            totalPage: Math.ceil(count / 7),
             list: listOrder.reverse(),   
         })
         
@@ -334,10 +331,8 @@ const getOrderbyUser = async(req,res)=>{
 }
 module.exports = {
     order,
-    getcart,
     updateStatus,
     filterOrder,
-  
     cancel,
     getOrderbyUser
 }
