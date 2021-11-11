@@ -177,11 +177,17 @@ const filterOrder = async (req, res) => {
             case 4: status = "delivered"; break;
             case 5: status = "cancel"; break;
         }
-        const order = await Order.findAll({
-            where: {
-                status: status
-            }
-        });
+        let order
+        if(st == 1 || st==2 || st==3 || st==4 || st==5){
+             order = await Order.findAll({
+                where: {
+                    status: status
+                }
+            });
+         }
+        if(st == 6){
+             order = await Order.findAll();
+        }
 
         let listOrder = [];
         for(let i= 0 ; i<order.length; i++){
