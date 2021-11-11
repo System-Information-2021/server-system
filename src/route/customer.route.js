@@ -11,7 +11,7 @@ router.get('/product/search', productController.searchProduct)
 router.get('/product/:id', productController.getProductById)
 router.get('/category', categoryController.selectCategoryOption)
 router.get('/brand', brandController.selectBrandOption)
-// router.get('/new-release', productController.getNewRelease)
+router.get('/new-release', productController.getNewRelease)
 // router.get('/review/product', productController.reviewProduct)
 
 

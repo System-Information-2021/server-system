@@ -537,8 +537,9 @@ const calAverageRate = (reviews) => {
 }
 
 const rating = (products) => {
-    products.forEach(product => {
+    products.forEach(async product => {
         product.rank['rate'] = calAverageRate(product['review'])
+        await Rank.update({ rate : product.rank['rate'] },{ where : { id : product.rank.id } })
     })
 
 
@@ -587,7 +588,7 @@ const rankProduct = async (req, res) => {
         return res.json({
             code: 200,
             status: 'OK',
-            data: scoreProduct
+            data: scoreProduct.rankedItems.slice(0,4)
         })
 
     } catch (err) {
