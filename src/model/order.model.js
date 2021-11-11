@@ -13,10 +13,6 @@ const order = db.define('tbl_orders', {
         type : DataTypes.INTEGER,
         allowNull : false
     },
-    total_qty : {
-        type : DataTypes.INTEGER,
-        allowNull : false
-    },
     firstname : {
         type : DataTypes.STRING,
         allowNull : false
@@ -49,11 +45,11 @@ const order = db.define('tbl_orders', {
 
 })
   //  foreignKey: customer
-user.hasMany(order, { foreignKey: 'id_customer' })
-order.belongsTo(user, { foreignKey: 'id_customer' })
+user.hasMany(order, { foreignKey: 'id_customer' , as : 'order'})
+order.belongsTo(user, { foreignKey: 'id_customer', as: 'customer' })
     //  foreignKey: staff
 user.hasMany(order, { foreignKey: 'id_staff' })
-order.belongsTo(user, { foreignKey: 'id_staff' })
+order.belongsTo(user, { foreignKey: 'id_staff'})
 
-// order.sync({alter : true})
+//  order.sync({alter : true})
 module.exports= order

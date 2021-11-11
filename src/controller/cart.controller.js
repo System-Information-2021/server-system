@@ -3,22 +3,10 @@ const Product = require('../model/product.model')
 const Order = require('../model/order.model')
 const Order_detail= require('../model/order_detail.model')
 const User = require('../model/user.model')
-const Op = require('Sequelize').Op
+const Op = require('sequelize').Op
 
 const order= async(req,res)=>{
-    var token =await req.headers.token;
-    const user = await User.findOne({
-        where:{
-            token : token 
-        }
-    })
-    if(user=== null){
-        return res.json({
-            code: 400,
-            status: 'Bad Request',
-            message: 'user invalided'
-        })
-    }
+    var id_user =await req.body.id_user;
     let{
         firstname,
         lastname,
@@ -26,13 +14,12 @@ const order= async(req,res)=>{
         city,
         numberphone,
         total_price,
-        total_qty,
         //object array
         data
     }= req.body;
 
    // 
-    if(!firstname ||!lastname||!address||!city||!numberphone||!total_price||!total_qty){
+    if(!firstname ||!lastname||!address||!city||!numberphone||!total_price||!id_user){
         return res.json({
             code: 400,
             status: 'Bad Request',
@@ -53,13 +40,12 @@ const order= async(req,res)=>{
            city: city,
            numberphone: numberphone,
            total_price:total_price,
-           total_qty: total_qty,
-           status: 'Pending',
-           id_customer: user.id
+           status: 'pending',
+           id_customer: id_user
         })
         await order.save()
         for (let i = 0; i < data.length; i++) {
-            const product = await  Product.findByPk(data[i].id_product);
+            const product = await  Product.findByPk(data[i].id);
             if(product ===null) return res.json({
                 code: 400,
                 status: 'Bad Request',
@@ -67,10 +53,9 @@ const order= async(req,res)=>{
             })
             else{
                 const orderdetail= await new Order_detail({
-                    total_detail : data[i].total_detail,
                     quantity : data[i].qty,
                     id_order : order.id,
-                    id_product : data[i].id_product
+                    id_product : data[i].id
                 })
                await  orderdetail.save()
             }
@@ -142,11 +127,11 @@ const updateStatus = async(req,res)=>{
         const id = req.params.id;
         let status;
         switch(st){
-            case 1: status = "Pending"; break;
-            case 2: status = "Received"; break;
-            case 3: status = "Delivering"; break;
-            case 4: status = "Delivered"; break;
-            case 5: status = "Cancel"; break;
+            case 1: status = "pending"; break;
+            case 2: status = "received"; break;
+            case 3: status = "delivering"; break;
+            case 4: status = "delivered"; break;
+            case 5: status = "cancel"; break;
         }
         const existOrder = await Order.findByPk(id)        
         if (existOrder !== null) {
@@ -186,40 +171,49 @@ const filterOrder =async(req,res)=>{
         let st = parseInt( req.params.status)
         let status;
         switch(st){
-            case 1: status = "Pending"; break;
-            case 2: status = "Received"; break;
-            case 3: status = "Delivering"; break;
-            case 4: status = "Delivered"; break;
-            case 5: status = "Cancel"; break;
+            case 1: status = "pending"; break;
+            case 2: status = "received"; break;
+            case 3: status = "delivering"; break;
+            case 4: status = "delivered"; break;
+            case 5: status = "cancel"; break;
         }
         const order = await Order.findAll({
             where: {
             status: status
             }
         });
-        if (order.length <= 7) {
-            data = await Order.findAll({
-                limit: 7,
-                offset: 0,
+
+        let listOrder = [];
+        for(let i= 0 ; i<order.length; i++){
+            let plain = await order[i].get({ plain : true});
+            let orderdetail = await Order_detail.findAll({
                 where: {
-                status: status
-                }
+                    id_order: plain.id
+                },
+                include: [ 'product' ]
             })
+            let listproducts = []
+            for(let j =0 ; j<orderdetail.length;j++ )
+            {   
+                let product = orderdetail[j].product.get({plain: true});
+                product['qty'] = orderdetail[j].quantity;
+                product.quantity = product.description = product.gender = product.active = undefined;
+                listproducts.push (product)
+            } 
+            plain['products'] = listproducts;
+            listOrder.push(plain)      
         }
-        else{
-            data = await Order.findAll({
-                limit: ((order.length - page * 7) >= 0) ? 7 : order.length % 7,
-                offset: ((order.length - page * 7) > 0) ? order.length - page * 7 : 0,
-                where: {
-                    status: status
-                }
-            })
+        const count = listOrder.length
+        if (page) {
+            let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
+            let numberProduct = ((count - page * 7) >= 0) ? 7 : count % 7
+            listOrder = listOrder.slice(offset, offset + numberProduct)
         }
         res.json({
             code: 200,
             message:'succesfully',
             totalPage: Math.ceil(order.length / 7),
-            data: data.reverse()
+            data: listOrder.reverse(),
             
         })
     }catch (err) {
@@ -232,48 +226,7 @@ const filterOrder =async(req,res)=>{
     }
 }
 
-const orderdetail =async(req,res)=>{
-    try{
-        const detail = req.params.id;
-        const order = await Order.findByPk(detail);
-        const detailOrder = await Order_detail.findAll({
-            where: {
-                id_order: detail
-            }
-        });
-        if(!order || !detailOrder){
-            return res.json({
-                code: 400,
-                status: 'Bad Request',
-                message: 'fail'
-            })
-        }
-        var orderr = new Array();
-        var detaill= new Array();
-        console.log(detailOrder.length);
-        var plain = await order.get({plain: true})   
-        for (var i = 0; i < detailOrder.length; i++) {
-            var plain1 = await detailOrder[i].get({plain: true})
-            plain1['product'] = await Product.findByPk(plain1.id_product);    
-            detaill.push(plain1)
-            detailOrder[i].id_order =detailOrder[i].id_product = undefined
-        }
-            plain['detail'] = detaill
-            orderr.push(order)
-        res.json({
-            code: 200,
-            message: 'successfully',
-            order: orderr,
-        })
-    }catch (err) {
-        console.log(err)
-        return res.json({
-            code: 500,
-            status: 'Internal Error',
-            message: 'Something went wrong'
-        })
-    }
-}
+
 const cancel = async(req,res)=>{
     try{
             const id = req.params.id;
@@ -285,7 +238,7 @@ const cancel = async(req,res)=>{
                     message: 'failll'
                 })
             }
-            if(order.status== 'Delivered'|| order.status=='Delivering'|| order.status=='Cancel'){
+            if(order.status== 'delivered'|| order.status=='delivering'|| order.status=='cancel'){
                 return res.json({
                     code: 400,
                     status: 'Bad Request',
@@ -293,7 +246,7 @@ const cancel = async(req,res)=>{
                 })
             }
             await Order.update({
-                    status: 'Cancel'
+                    status: 'cancel'
             },
                 {
                     where: { id_order : id }
@@ -318,51 +271,50 @@ const cancel = async(req,res)=>{
 const getOrderbyUser = async(req,res)=>{
     try{
         const { page} = req.query
-        var token =await req.headers.token;
-        const user = await User.findOne({
-            where:{
-                token : token 
-            }
-        })
+        var id_user =await req.params.id_user;
         const getOrder = await Order.findAll({
             where:{
-                id_customer : user.id,
-                //status: 'Pending'|| 'Received' || 'Delivering' || 'Delivered'
+                id_customer :id_user,
                 status: {
-                    [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
+                    [Op.or]: ['pending' ,'received', 'delivering' , 'delivered', 'cancel' ]
                 }
             }
-        })
-        if (getOrder.length <= 7) {
-            data = await Order.findAll({
-                limit: 7,
-                offset: 0,
-                where:{
-                    id_customer : user.id,
-                    status: {
-                        [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
-                    }
-                }
+        }); 
+        let listOrder = [];
+        for(let i= 0 ; i<getOrder.length; i++){
+            let plain = await getOrder[i].get({ plain : true});
+            let orderdetail = await Order_detail.findAll({
+                where: {
+                    id_order: plain.id
+
+                },
+                include: [ 'product' ]
             })
+            let listproducts = []
+            for(let j =0 ; j<orderdetail.length;j++ )
+            {   
+                let product = orderdetail[j].product.get({plain: true});
+                product['qty'] = orderdetail[j].quantity;
+                product.quantity = product.description = product.gender = product.active = undefined;
+                listproducts.push (product)
+            } 
+            plain['products'] = listproducts;
+            listOrder.push(plain)      
         }
-        else{
-            data = await Order.findAll({
-                limit: ((getOrder.length - page * 7) >= 0) ? 7 : getOrder.length % 7,
-                offset: ((getOrder.length - page * 7) > 0) ? getOrder.length - page * 7 : 0,
-                where:{
-                    id_customer : user.id,
-                    status: {
-                        [Op.or]: ['Pending' ,'Received', 'Delivering' , 'Delivered' ]
-                    }
-                }
-            })
+        const count = listOrder.length
+        if (page) {
+            let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
+            let numberProduct = ((count - page * 7) >= 0) ? 7 : count % 7
+            listOrder = listOrder.slice(offset, offset + numberProduct)
         }
         res.json({
             code: 200,
             status: 'OK',
-            totalPage: Math.ceil(getOrder.length / 7),
-            data: data.reverse()
+            totalPage: Math.ceil(listOrder.length / 7),
+            list: listOrder.reverse(),   
         })
+        
+        
     }catch (err) {
         console.log(err)
         return res.json({
@@ -377,7 +329,7 @@ module.exports = {
     getcart,
     updateStatus,
     filterOrder,
-    orderdetail,
+  
     cancel,
     getOrderbyUser
 }
