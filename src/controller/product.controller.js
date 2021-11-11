@@ -399,6 +399,55 @@ const searchProduct = async (req, res) => {
             listProduct.push(plain)
         }
 
+        if (req.query.page) {
+            let count = listProduct.length
+            let page = req.query.page
+            let offset = ((count - page * 8) > 0) ? count - page * 8 : 0
+            let numberProduct = ((count - page * 8) >= 0) ? 8 : count % 8
+            listProduct = listProduct.slice(offset, offset + numberProduct)
+        }
+
+        return res.json({
+            code: 200,
+            status: 'OK',
+            totalPage: Math.ceil(listProduct.length / 7),
+            queryWord: searchKey,
+            quantityMatch: listProduct.length,
+            data: listProduct.reverse()
+        })
+
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: 'Something went wrong'
+        })
+    }
+}
+
+const advancedSearch = async (req, res) => {
+    try {
+        const searchKey = req.query.key
+        let data = await Product.findAll({
+            where: { active: true },
+            include: ['category', 'brand']
+        })
+
+        data = data.filter(product => {
+            return product.name.toLowerCase().search(searchKey.toLowerCase()) !== -1
+        })
+
+        let listProduct = []
+        for (var i = 0; i < data.length; i++) {
+            var plain = await data[i].get({ plain: true })
+            plain['category'] = await data[i].getCategory()
+            plain['brand'] = await data[i].getBrand()
+            delete plain['id_category'];
+            delete plain['id_brand'];
+            listProduct.push(plain)
+        }
+
         let filters = req.query;
         delete filters.key
         delete filters.page
@@ -441,7 +490,6 @@ const searchProduct = async (req, res) => {
         })
     }
 }
-
 const getNewRelease = async (req, res) => {
     try {
         let data = await Product.findAll({
@@ -643,5 +691,6 @@ module.exports = {
     searchProduct,
     getNewRelease,
     rankProduct,
-    reviewProduct
+    reviewProduct,
+    advancedSearch
 }
