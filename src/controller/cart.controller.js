@@ -279,12 +279,7 @@ const getOrderbyUser = async(req,res)=>{
             });
         }
 
-        // const getOrder = await Order.findAll({
-        //     where:{
-        //         id_customer :id_user,
-                
-        //     }
-        // }); 
+
         let listOrder = [];
         for(let i= 0 ; i<getOrder.length; i++){
             let plain = await getOrder[i].get({ plain : true});
