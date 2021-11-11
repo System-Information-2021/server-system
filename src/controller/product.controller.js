@@ -2,7 +2,9 @@ const Product = require('../model/product.model')
 const Brand = require('../model/brands.model')
 const Category = require('../model/categories.model')
 const cloudinary = require('../../utils/cloud.config')
+const ranked = require('ranked')
 const db = require('../../utils/db')
+const Rank = require('../model/rank.model')
 
 const extensionArr = ['jpg', 'jpeg', 'png']
 
@@ -345,8 +347,8 @@ const getAllProductForCustomer = async (req, res) => {
         })
         const count = data.length
         if (page) {
-            let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
-            let numberProduct = ((count - page * 7) >= 0) ? 7 : count % 7
+            let offset = ((count - page * 12) > 0) ? count - page * 12 : 0
+            let numberProduct = ((count - page * 12) >= 0) ? 12 : count % 12
             data = data.slice(offset, offset + numberProduct)
         }
         let listProduct = []
@@ -360,7 +362,7 @@ const getAllProductForCustomer = async (req, res) => {
         return res.json({
             code: 200,
             status: 'OK',
-            totalPage: Math.ceil(count / 7),
+            totalPage: Math.ceil(count / 12),
             data: listProduct.reverse()
         })
 
@@ -397,32 +399,20 @@ const searchProduct = async (req, res) => {
             listProduct.push(plain)
         }
 
-        let filters = req.query;
-        delete filters.key
-        if (typeof req.query !== {}) {
-
-            listProduct = listProduct.filter(product => {
-                let isValid = true;
-                for (key in filters) {
-                    // console.log(key, product[key], filters[key]);
-                    isValid = isValid && product[key].name.toLowerCase() == filters[key].toLowerCase();
-                }
-                return isValid;
-            });
-        }
-        
-        if (filters.page) {
-            let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
-            let numberProduct = ((count - page * 7) >= 0) ? 7 : count % 7
+        if (req.query.page) {
+            let count = listProduct.length
+            let page = req.query.page
+            let offset = ((count - page * 8) > 0) ? count - page * 8 : 0
+            let numberProduct = ((count - page * 8) >= 0) ? 8 : count % 8
             listProduct = listProduct.slice(offset, offset + numberProduct)
         }
+
         return res.json({
             code: 200,
             status: 'OK',
             totalPage: Math.ceil(listProduct.length / 7),
             queryWord: searchKey,
-            keyFilter: (filters !== {}) ? filters : null,
-            quantityMatch : listProduct.length,
+            quantityMatch: listProduct.length,
             data: listProduct.reverse()
         })
 
@@ -436,6 +426,260 @@ const searchProduct = async (req, res) => {
     }
 }
 
+const advancedSearch = async (req, res) => {
+    try {
+        const searchKey = req.query.key
+        let data = await Product.findAll({
+            where: { active: true },
+            include: ['category', 'brand']
+        })
+
+        data = data.filter(product => {
+            return product.name.toLowerCase().search(searchKey.toLowerCase()) !== -1
+        })
+
+        let listProduct = []
+        for (var i = 0; i < data.length; i++) {
+            var plain = await data[i].get({ plain: true })
+            plain['category'] = await data[i].getCategory()
+            plain['brand'] = await data[i].getBrand()
+            delete plain['id_category'];
+            delete plain['id_brand'];
+            listProduct.push(plain)
+        }
+
+        let filters = req.query;
+        delete filters.key
+        delete filters.page
+        if (typeof req.query !== {}) {
+
+            listProduct = listProduct.filter(product => {
+                let isValid = true;
+                for (key in filters) {
+                    // console.log(key, product[key], filters[key]);
+                    isValid = isValid && product[key].name.toLowerCase() == filters[key].toLowerCase();
+                }
+                return isValid;
+            });
+        }
+
+        if (req.query.page) {
+            let count = listProduct.length
+            let page = req.query.page
+            let offset = ((count - page * 8) > 0) ? count - page * 8 : 0
+            let numberProduct = ((count - page * 8) >= 0) ? 8 : count % 8
+            listProduct = listProduct.slice(offset, offset + numberProduct)
+        }
+
+        return res.json({
+            code: 200,
+            status: 'OK',
+            totalPage: Math.ceil(listProduct.length / 7),
+            queryWord: searchKey,
+            keyFilter: (filters !== {}) ? filters : null,
+            quantityMatch: listProduct.length,
+            data: listProduct.reverse()
+        })
+
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: 'Something went wrong'
+        })
+    }
+}
+const getNewRelease = async (req, res) => {
+    try {
+        let data = await Product.findAll({
+            where: { active: true },
+            include: ['category', 'brand']
+        })
+
+        const offset = data.length - 5
+
+        data = data.slice(offset, data.length)
+
+        data.forEach(product => {
+            product.id_brand = product.id_category = undefined
+        })
+
+        return res.json({
+            code: 200,
+            status: 'OK',
+            totalNewRelease: data.length,
+            data: data.reverse()
+        })
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: 'Something went wrong'
+        })
+    }
+}
+const calAverageRate = (reviews) => {
+    if (reviews.length) {
+        let totalWeight = 0
+        let totalReviews = 0
+        for (let i = 4; i >= 0; i--) {
+            let eachItem = reviews[i] * (i + 1)
+            totalWeight += eachItem
+            totalReviews += reviews[i]
+        }
+        let average = totalWeight / totalReviews
+        return parseFloat(average.toFixed(2))
+    } else {
+        return null
+    }
+}
+
+const rating = (products) => {
+    products.forEach(product => {
+        product.rank['rate'] = calAverageRate(product['review'])
+    })
+
+
+    // console.log( 'Calculate rating : ')
+    // console.table(products)
+
+    const scoreFn = product => product.rank['rate']
+
+    var rankedItems = ranked.ranking(products, scoreFn)
+
+    // console.log( 'Ranking : ', rankedItems)
+    return { rankedItems }
+}
+
+const rankProduct = async (req, res) => {
+    try {
+        const data = await Product.findAll({
+            where: { active: true },
+            include: ['category', 'brand', 'rank']
+        });
+        let listProduct = []
+        for (var i = 0; i < data.length; i++) {
+            var plain = await data[i].get({ plain: true })
+            delete plain['id_category'];
+            delete plain['id_brand'];
+            delete plain['id_rank'];
+            listProduct.push(plain)
+        }
+
+        listProduct.forEach(product => {
+            let review = []
+            for (var key in product.rank) {
+                if (!['id', 'rate', 'createdAt', 'updatedAt'].includes(key)) {
+                    review.push(product.rank[key])
+                }
+            }
+            product['review'] = review
+        })
+
+        listProduct = listProduct.filter(product => {
+            return product['review'].length !== 0
+        })
+
+        let scoreProduct = rating(listProduct)
+
+        return res.json({
+            code: 200,
+            status: 'OK',
+            data: scoreProduct
+        })
+
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Internal Error',
+            message: "Something went wrong"
+        })
+    }
+}
+
+const reviewProduct = async (req, res) => {
+    try {
+        const id_product = req.query.id
+        const product = await Product.findByPk(id_product)
+
+        if (product) {
+            var rankProduct = await Rank.findByPk(product.id_rank)
+            const star = parseInt(req.query.star);
+            if (rankProduct !== null) {
+                switch (star) {
+                    case 1:
+                        await rankProduct.update({
+                            oneStar: rankProduct.oneStar + 1
+                        })
+                        break;
+                    case 2:
+                        await rankProduct.update({
+                            twoStar: rankProduct.twoStar + 1
+                        })
+                        break;
+                    case 3:
+                        await rankProduct.update({
+                            threeStar: rankProduct.threeStar + 1
+                        })
+                        break;
+                    case 4:
+                        await rankProduct.update({
+                            fourStar: rankProduct.fourStar + 1
+                        })
+                        break;
+                    case 5:
+                        await rankProduct.update({
+                            fiveStar: rankProduct.fiveStar + 1
+                        })
+                        break;
+                }
+            } else {
+                switch (star) {
+                    case 1:
+                        var newRank = Rank.build({ oneStar: 1 })
+                        break;
+                    case 2:
+                        var newRank = Rank.build({ twoStar: 1 })
+                        break;
+                    case 3:
+                        var newRank = Rank.build({ threeStar: 1 })
+                        break;
+                    case 4:
+                        var newRank = Rank.build({ fourStar: 1 })
+                        break;
+                    case 5:
+                        var newRank = Rank.build({ fiveStar: 1 })
+                        break;
+                }
+                await newRank.save()
+                product.setDataValue('id_rank', newRank.id)
+                await product.save()
+            }
+            return res.json({
+                code: 200,
+                status: 'OK',
+                rate: (rankProduct) ? rankProduct : newRank,
+                data: product
+            })
+        } else {
+            return res.json({
+                code: 400,
+                status: 'Bad Request',
+                message: 'Product does not exist'
+            })
+        }
+
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500, status: 'Internal Error', message: 'Something went wrong'
+        })
+    }
+}
+
 module.exports = {
     addProduct,
     getProductById,
@@ -444,5 +688,9 @@ module.exports = {
     getAllProduct,
     activeProduct,
     getAllProductForCustomer,
-    searchProduct
+    searchProduct,
+    getNewRelease,
+    rankProduct,
+    reviewProduct,
+    advancedSearch
 }

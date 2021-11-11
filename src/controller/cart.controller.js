@@ -1,7 +1,7 @@
 
 const Product = require('../model/product.model')
 const Order = require('../model/order.model')
-const Order_detail= require('../model/order_detail.model')
+const Order_detail = require('../model/order_detail.model')
 const User = require('../model/user.model')
 const Op = require('sequelize').Op
 
@@ -16,7 +16,7 @@ const order= async(req,res)=>{
         total_price,
         //object array
         data
-    }= req.body;
+    } = req.body;
 
    // 
     if(!firstname ||!lastname||!address||!city||!numberphone||!total_price||!id_user){
@@ -25,14 +25,14 @@ const order= async(req,res)=>{
             status: 'Bad Request',
             message: 'fill all field, pleas'
         })
-    }else if (!data || !isNaN(data)) {
+    } else if (!data || !isNaN(data)) {
         return res.json({
             code: 400,
             status: 'Bad Request',
             message: 'shopping cart does not exist'
         })
-    } 
-    try{
+    }
+    try {
         const order = new Order({
            firstname: firstname,
            lastname: lastname,
@@ -57,7 +57,7 @@ const order= async(req,res)=>{
                     id_order : order.id,
                     id_product : data[i].id
                 })
-               await  orderdetail.save()
+                await orderdetail.save()
             }
         }
         res.json({
@@ -89,10 +89,10 @@ const order= async(req,res)=>{
             })
         }
     }
-    
+
 }
-const getcart =async(req,res)=>{
-    try{
+const getcart = async (req, res) => {
+    try {
         const { page } = req.query
         const { count } = await Order.findAndCountAll();
         if (count <= 7) {
@@ -100,7 +100,7 @@ const getcart =async(req,res)=>{
                 limit: 7,
                 offset: 0
             })
-        }else{
+        } else {
             data = await Order.findAll({
                 limit: ((count - page * 7) >= 0) ? 7 : count % 7,
                 offset: ((count - page * 7) > 0) ? count - page * 7 : 0
@@ -112,7 +112,7 @@ const getcart =async(req,res)=>{
             totalPage: Math.ceil(count / 7),
             data: data.reverse()
         })
-    }catch (err) {
+    } catch (err) {
         console.log(err)
         return res.json({
             code: 500,
@@ -120,10 +120,10 @@ const getcart =async(req,res)=>{
             message: 'Something went wrong'
         })
     }
-}  
-const updateStatus = async(req,res)=>{
-    try{
-        const st =parseInt( req.params.st);
+}
+const updateStatus = async (req, res) => {
+    try {
+        const st = parseInt(req.params.st);
         const id = req.params.id;
         let status;
         switch(st){
@@ -133,29 +133,29 @@ const updateStatus = async(req,res)=>{
             case 4: status = "delivered"; break;
             case 5: status = "cancel"; break;
         }
-        const existOrder = await Order.findByPk(id)        
+        const existOrder = await Order.findByPk(id)
         if (existOrder !== null) {
             const newBrand = await Order.update({
-                    status: status
+                status: status
             },
                 {
-                    where: { id_order : id }
+                    where: { id_order: id }
                 }
             )
             return res.json({
                 code: 200,
                 status: 'Updated',
                 message: 'update successfully'
-            
+
             })
-        } else if(existOrder === null) {
+        } else if (existOrder === null) {
             return res.json({
-                code : 400,
-                status : 'Not Found',
-                message : 'This order is not found'
+                code: 400,
+                status: 'Not Found',
+                message: 'This order is not found'
             })
         }
-    }catch (err) {
+    } catch (err) {
         console.log(err)
         return res.json({
             code: 500,
@@ -165,10 +165,10 @@ const updateStatus = async(req,res)=>{
     }
 }
 
-const filterOrder =async(req,res)=>{
-    try{
-        const { page} = req.query
-        let st = parseInt( req.params.status)
+const filterOrder = async (req, res) => {
+    try {
+        const { page } = req.query
+        let st = parseInt(req.params.status)
         let status;
         switch(st){
             case 1: status = "pending"; break;
@@ -179,7 +179,7 @@ const filterOrder =async(req,res)=>{
         }
         const order = await Order.findAll({
             where: {
-            status: status
+                status: status
             }
         });
 
@@ -211,12 +211,12 @@ const filterOrder =async(req,res)=>{
         }
         res.json({
             code: 200,
-            message:'succesfully',
+            message: 'succesfully',
             totalPage: Math.ceil(order.length / 7),
             data: listOrder.reverse(),
             
         })
-    }catch (err) {
+    } catch (err) {
         console.log(err)
         return res.json({
             code: 500,
@@ -253,12 +253,14 @@ const cancel = async(req,res)=>{
                 }
             )
             return res.json({
-            code: 200,
-            status : 'cancel',
-            message: 'cancel succesfully'
-        
-        })
-    }catch (err) {
+                code: 200,
+                status: 'cancel',
+                message: 'cancel succesfully'
+    
+            })
+        }
+
+     catch (err) {
         console.log(err)
         return res.json({
             code: 500,
