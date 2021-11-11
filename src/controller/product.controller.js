@@ -401,6 +401,7 @@ const searchProduct = async (req, res) => {
 
         let filters = req.query;
         delete filters.key
+        delete filters.page
         if (typeof req.query !== {}) {
 
             listProduct = listProduct.filter(product => {
@@ -413,11 +414,14 @@ const searchProduct = async (req, res) => {
             });
         }
 
-        if (filters.page) {
-            let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
-            let numberProduct = ((count - page * 7) >= 0) ? 7 : count % 7
+        if (req.query.page) {
+            let count = listProduct.length
+            let page = req.query.page
+            let offset = ((count - page * 8) > 0) ? count - page * 8 : 0
+            let numberProduct = ((count - page * 8) >= 0) ? 8 : count % 8
             listProduct = listProduct.slice(offset, offset + numberProduct)
         }
+
         return res.json({
             code: 200,
             status: 'OK',
