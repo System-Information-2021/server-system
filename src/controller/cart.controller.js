@@ -311,7 +311,7 @@ const getOrderbyUser = async(req,res)=>{
             code: 200,
             status: 'OK',
             totalPage: Math.ceil(count / 7),
-            list: listOrder.reverse(),   
+            data: listOrder.reverse(),   
         })
         
         
