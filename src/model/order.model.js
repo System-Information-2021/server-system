@@ -15,19 +15,35 @@ const order = db.define('tbl_orders', {
     },
     firstname : {
         type : DataTypes.STRING,
-        allowNull : false
+        allowNull : false,
+        validate: {
+            notEmpty: { msg: 'firstname must not be empty' },
+            notNull: { msg: 'order must have a firstname' },
+          }
     },
     lastname : {
         type : DataTypes.STRING,
-        allowNull : false
+        allowNull : false,
+        validate: {
+            notEmpty: { msg: 'lastname must not be empty' },
+            notNull: { msg: 'order must have a lasttname' },
+          }
     },
     address : {
         type : DataTypes.STRING,
-        allowNull : false
+        allowNull : false,
+        validate: {
+            notEmpty: { msg: 'address must not be empty' },
+            notNull: { msg: 'order must have a address' },
+          }
     },
     city : {
         type : DataTypes.STRING,
-        allowNull : false
+        allowNull : false,
+        validate: {
+            notEmpty: { msg: 'order must not be empty' },
+            notNull: { msg: 'order must have a city' },
+          }
     },
     numberphone : {
         type : DataTypes.STRING,
@@ -42,6 +58,10 @@ const order = db.define('tbl_orders', {
         type : DataTypes.STRING,
         allowNull : false
     },
+    note: {
+        type : DataTypes.STRING,
+        allowNull : true
+    },
 
 })
   //  foreignKey: customer
@@ -51,5 +71,5 @@ order.belongsTo(user, { foreignKey: 'id_customer', as: 'customer' })
 user.hasMany(order, { foreignKey: 'id_staff' })
 order.belongsTo(user, { foreignKey: 'id_staff'})
 
-//  order.sync({alter : true})
+ order.sync({alter : true})
 module.exports= order

@@ -14,12 +14,13 @@ const order= async(req,res)=>{
         city,
         numberphone,
         total_price,
+        note,
         //object array
         data
     } = req.body;
 
    // 
-    if(!firstname ||!lastname||!address||!city||!numberphone||!total_price||!id_user){
+    if(!total_price||!id_user){
         return res.json({
             code: 400,
             status: 'Bad Request',
@@ -41,7 +42,8 @@ const order= async(req,res)=>{
            numberphone: numberphone,
            total_price:total_price,
            status: 'pending',
-           id_customer: id_user
+           id_customer: id_user,
+           note: note
         })
         await order.save()
         for (let i = 0; i < data.length; i++) {
@@ -51,6 +53,7 @@ const order= async(req,res)=>{
                 status: 'Bad Request',
                 message: 'Product does exist'
             })
+            
             else{
                 const orderdetail= await new Order_detail({
                     quantity : data[i].qty,
