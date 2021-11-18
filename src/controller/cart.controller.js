@@ -6,7 +6,7 @@ const User = require('../model/user.model')
 const Op = require('sequelize').Op
 
 const order= async(req,res)=>{
-    var id_user =await req.body.id_user;
+    var id_user =parseInt( req.body.id_user);
     let{
         firstname,
         lastname,
@@ -18,15 +18,8 @@ const order= async(req,res)=>{
         //object array
         data
     } = req.body;
-
-   // 
-    if(!total_price||!id_user){
-        return res.json({
-            code: 400,
-            status: 'Bad Request',
-            message: 'fill all field, pleas'
-        })
-    } else if (!data || !isNaN(data)) {
+   // check empty
+    if (!data || !isNaN(data)) {
         return res.json({
             code: 400,
             status: 'Bad Request',
@@ -45,7 +38,8 @@ const order= async(req,res)=>{
            id_customer: id_user,
            note: note
         })
-        await order.save()
+        var list = [];
+        //check quantity
         for (let i = 0; i < data.length; i++) {
             const product = await  Product.findByPk(data[i].id);
             if(product ===null) return res.json({
@@ -53,21 +47,49 @@ const order= async(req,res)=>{
                 status: 'Bad Request',
                 message: 'Product does exist'
             })
-            
-            else{
+            else if(data[i].qty > product.quantity){         
+                var string = "the quantity of "+product.name +" is not enough  ";
+                list.push(string)
+           }
+        }
+     
+       // if its ok then add order to database
+        if(list.length === 0){
+            console.log("dat hang dc")
+            console.log(data.length)
+            await order.save()
+            console.log(order.id)
+            for (let i = 0; i < data.length; i++) {
+                console.log(i)
+                console.log("id ORder: "+ order.id)
                 const orderdetail= await new Order_detail({
-                    quantity : data[i].qty,
-                    id_order : order.id,
-                    id_product : data[i].id
+                quantity : data[i].qty,
+                id_order : order.id,
+                id_product : data[i].id
                 })
                 await orderdetail.save()
-            }
+                // deduct quantity when order succesful
+                const DeductProd = await Product.findByPk(data[i].id)
+                let qtyafter = DeductProd.quantity - data[i].qty;
+                await Product.update({ quantity: qtyafter }, {
+                    where: {
+                      id :  data[i].id
+                    }
+                  });
+                  
+                }
+            return  res.json({
+                code: 200,
+                status: 'Created',
+                message: "Order successfully"
+            })
+        } else {
+            return  res.json({
+                code: 200,
+                status: 'Fail to create order',
+                message: list
+            })
         }
-        res.json({
-            code: 200,
-            status: 'Created',
-            message: "Order successfully"
-        })
     } catch (err) {
         console.log(err)
         if (err.errors) {
@@ -109,19 +131,53 @@ const updateStatus = async (req, res) => {
         }
         const existOrder = await Order.findByPk(id)
         if (existOrder !== null) {
-            const newBrand = await Order.update({
-                status: status
-            },
-                {
-                    where: { id_order: id }
+            if(st=== 5){
+                await Order.update({
+                    status: status
+                 },
+                    {
+                        where: { id_order : id }
+                    }
+                 )
+                 //add qty of product back
+                const detail = await Order_detail.findAll({
+                    where : {
+                        id_order : id
+                    }
+                })
+                for(let i= 0 ; i< detail.length;i++){  
+                     let qty = detail[i].quantity;
+                    const DeductProd = await Product.findByPk(detail[i].id_product)
+                    let afterqty = DeductProd.quantity + qty  
+                    await Product.update({ quantity: afterqty}, {
+                        where: {
+                        id :  detail[i].id_product
+                        }
+                    });
                 }
-            )
-            return res.json({
-                code: 200,
-                status: 'Updated',
-                message: 'update successfully'
-
-            })
+                return res.json({
+                    code: 200,
+                    status: 'Updated',
+                    message: 'update successfully'
+    
+                })
+             }
+        else{
+                const newBrand = await Order.update({
+                    status: status
+                },
+                    {
+                        where: { id_order: id }
+                    }
+                )
+                return res.json({
+                    code: 200,
+                    status: 'Updated',
+                    message: 'update successfully'
+    
+                })
+            }
+            
         } else if (existOrder === null) {
             return res.json({
                 code: 400,
@@ -232,10 +288,29 @@ const cancel = async(req,res)=>{
                     where: { id_order : id }
                 }
             )
+            //add qty of product back
+            const detail = await Order_detail.findAll({
+                where : {
+                    id_order : id
+                }
+            })
+            for(let i= 0 ; i< detail.length;i++){
+                console.log("so luong cua sp thu" + i)
+                let qty = detail[i].quantity;
+                console.log(qty) 
+                const DeductProd = await Product.findByPk(detail[i].id_product)
+                let afterqty = DeductProd.quantity + qty  
+                await Product.update({ quantity: afterqty}, {
+                    where: {
+                      id :  detail[i].id_product
+                    }
+                  });
+            }
             return res.json({
                 code: 200,
                 status: 'cancel',
-                message: 'cancel succesfully'
+                message: 'cancel succesfully',
+             
     
             })
         }
@@ -327,10 +402,30 @@ const getOrderbyUser = async(req,res)=>{
         })
     }
 }
+
+const deleteOrder = async(req, res )=>{
+    id = req.params.id;
+    await Order_detail.destroy({
+        where: {
+            id_order: id
+        }
+    })
+    await Order.destroy({
+        where:{
+            id_order : id
+        }
+    })
+    res.json({
+                code: 200,
+                status: 'Deleted',
+                message: "Delete successfully"
+    })
+}
 module.exports = {
     order,
     updateStatus,
     filterOrder,
     cancel,
-    getOrderbyUser
+    getOrderbyUser,
+    deleteOrder
 }

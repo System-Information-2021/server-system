@@ -9,4 +9,5 @@ router.put('/update/:id/:st',controller.updateStatus);
 router.get('/filter/:status',controller.filterOrder)
 router.put('/cancel/:id',controller.cancel)
 router.get('/getorderbyuser/:id_user/:status',controller.getOrderbyUser)
+router.delete('/deleteorder/:id', controller.deleteOrder)
 module.exports = router;
