@@ -71,5 +71,5 @@ order.belongsTo(user, { foreignKey: 'id_customer', as: 'customer' })
 user.hasMany(order, { foreignKey: 'id_staff' })
 order.belongsTo(user, { foreignKey: 'id_staff'})
 
- order.sync({alter : true})
+//  order.sync({alter : true})
 module.exports= order
