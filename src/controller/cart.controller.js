@@ -404,22 +404,33 @@ const getOrderbyUser = async(req,res)=>{
 }
 
 const deleteOrder = async(req, res )=>{
-    id = req.params.id;
-    await Order_detail.destroy({
-        where: {
-            id_order: id
-        }
+    try{
+        id = req.params.id;
+        await Order_detail.destroy({
+            where: {
+                id_order: id
+            }
+        })
+        await Order.destroy({
+            where:{
+                id_order : id
+            }
+        })
+        res.json({
+                    code: 200,
+                    status: 'Deleted',
+                    message: "Delete successfully"
+        })
+    }
+
+    catch (err) {
+    console.log(err)
+    return res.json({
+        code: 500,
+        status: 'Internal Error',
+        message: 'Something went wrong'
     })
-    await Order.destroy({
-        where:{
-            id_order : id
-        }
-    })
-    res.json({
-                code: 200,
-                status: 'Deleted',
-                message: "Delete successfully"
-    })
+    }
 }
 module.exports = {
     order,
