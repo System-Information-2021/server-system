@@ -15,15 +15,18 @@ const order= async(req,res)=>{
         numberphone,
         total_price,
         note,
+        email,
         //object array
         data
     } = req.body;
    // check empty
+   let listEror = []
     if (!data || !isNaN(data)) {
+        listEror.push('shopping cart does not exist')
         return res.json({
             code: 400,
             status: 'Bad Request',
-            message: 'shopping cart does not exist'
+            message: listEror
         })
     }
     try {
@@ -36,18 +39,15 @@ const order= async(req,res)=>{
            total_price:total_price,
            status: 'pending',
            id_customer: id_user,
-           note: note
+           note: note,
+           email: email,
         })
         var list = [];
         //check quantity
         for (let i = 0; i < data.length; i++) {
             const product = await  Product.findByPk(data[i].id);
-            if(product ===null) return res.json({
-                code: 400,
-                status: 'Bad Request',
-                message: 'Product does exist'
-            })
-            else if(data[i].qty > product.quantity){         
+            
+             if(data[i].qty > product.quantity){         
                 var string = "the quantity of "+product.name +" is not enough  ";
                 list.push(string)
            }
@@ -81,7 +81,7 @@ const order= async(req,res)=>{
             return  res.json({
                 code: 200,
                 status: 'Created',
-                message: "Order successfully"
+                message:[ "Order successfully"]
             })
         } else {
             return  res.json({
@@ -91,10 +91,10 @@ const order= async(req,res)=>{
             })
         }
     } catch (err) {
-        console.log(err)
-        if (err.errors) {
+         
+        if (err.errors ) {
             let errors = []
-            if (err.length > 1) {
+            if (err.errors.length > 1) {
                 err.errors.forEach((each) => {
                     errors.push(each.message)
                 })
@@ -113,6 +113,7 @@ const order= async(req,res)=>{
                 message: 'Something went wrong'
             })
         }
+       
     }
 
 }
