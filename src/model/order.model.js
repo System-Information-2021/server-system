@@ -58,6 +58,15 @@ const order = db.define('tbl_orders', {
         type : DataTypes.STRING,
         allowNull : false
     },
+    email: {
+        type : DataTypes.STRING,
+        allowNull : false,
+        validate: {
+            notEmpty: { msg: 'mail must not be empty' },
+            notNull: { msg: 'order must have a mail' },
+            isEmail:{msg: 'invalid email format'}
+          }
+    },
     note: {
         type : DataTypes.STRING,
         allowNull : true
@@ -71,5 +80,5 @@ order.belongsTo(user, { foreignKey: 'id_customer', as: 'customer' })
 user.hasMany(order, { foreignKey: 'id_staff' })
 order.belongsTo(user, { foreignKey: 'id_staff'})
 
-//  order.sync({alter : true})
+order.sync({alter : true})
 module.exports= order
