@@ -85,7 +85,7 @@ const order= async(req,res)=>{
             })
         } else {
             return  res.json({
-                code: 200,
+                code: 400,
                 status: 'Fail to create order',
                 message: list
             })
