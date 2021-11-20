@@ -232,6 +232,8 @@ const filterOrder = async (req, res) => {
         let listOrder = [];
         for(let i= 0 ; i<order.length; i++){
             let plain = await order[i].get({ plain : true});
+            plain.createdAt= plain.createdAt.toLocaleString();
+            plain.updatedAt = plain.updatedAt.toLocaleString();
             let orderdetail = await Order_detail.findAll({
                 where: {
                     id_order: plain.id
@@ -244,6 +246,8 @@ const filterOrder = async (req, res) => {
                 let product = orderdetail[j].product.get({plain: true});
                 product['qty'] = orderdetail[j].quantity;
                 product.quantity = product.description = product.gender = product.active = undefined;
+                product.createdAt= product.createdAt.toLocaleString();
+                product.updatedAt = product.updatedAt.toLocaleString();
                 listproducts.push (product)
             } 
             plain['products'] = listproducts;
@@ -260,6 +264,7 @@ const filterOrder = async (req, res) => {
             message: 'succesfully',
             totalPage: Math.ceil(order.length / 7),
             data: listOrder.reverse(),
+            
             
         })
     } catch (err) {
@@ -371,6 +376,8 @@ const getOrderbyUser = async(req,res)=>{
         let listOrder = [];
         for(let i= 0 ; i<getOrder.length; i++){
             let plain = await getOrder[i].get({ plain : true});
+            plain.createdAt= plain.createdAt.toLocaleString();
+            plain.updatedAt = plain.updatedAt.toLocaleString();
             let orderdetail = await Order_detail.findAll({
                 where: {
                     id_order: plain.id
@@ -384,6 +391,8 @@ const getOrderbyUser = async(req,res)=>{
                 let product = orderdetail[j].product.get({plain: true});
                 product['qty'] = orderdetail[j].quantity;
                 product.quantity = product.description = product.gender = product.active = undefined;
+                product.createdAt= product.createdAt.toLocaleString();
+                product.updatedAt = product.updatedAt.toLocaleString();
                 listproducts.push (product)
             } 
             plain['products'] = listproducts;
