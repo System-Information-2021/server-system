@@ -112,15 +112,29 @@ const deleteBrand = async (req,res) => {
     const existBrand = await Brand.findByPk(id_brand)
 
     if(existBrand !== null) {
-        const result = await Brand.destroy({
-            where : {
-                id : id_brand
-            }
-        })
-        return res.json({
-            code : 200,
-            status : 'Successfully'
-        })
+        let productBrand = await Product.findAll({ where : { id_brand : existBrand.id } }) 
+
+        if(productBrand.length > 0) {
+            return res.json({
+                code : 400,
+                status : 'Bad Request',
+                message : "Can't delete because there are some product have contraint on this brand"
+            })
+        } else {
+            let brandDelete = existBrand.name
+            await Brand.destroy({
+                where : {
+                    id : id_brand
+                }
+            })
+
+            return res.json({
+                code : 200,
+                status : 'Successfully',
+                message : `${brandDelete} is deleted`
+            })
+        }
+
     } else if(existBrand === null) {
         return res.json({
             code : 400,

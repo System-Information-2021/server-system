@@ -67,6 +67,16 @@ const Product = db.define('tbl_products', {
         allowNull: true,
         defaultValue : null
     },
+    image4: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue : null
+    },
+    image5: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue : null
+    },
     active: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
@@ -84,7 +94,7 @@ Product.belongsTo(Brand, { foreignKey: 'id_brand', as: 'brand' })
 Category.hasMany(Product, { foreignKey: 'id_category', as: 'products' })
 Product.belongsTo(Category, { foreignKey: 'id_category', as: 'category' })
 
-Product.sync({alter : true})
+// Product.sync({alter : true})
 
 module.exports = Product;
 
