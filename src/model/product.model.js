@@ -67,6 +67,16 @@ const Product = db.define('tbl_products', {
         allowNull: true,
         defaultValue : null
     },
+    image4: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue : null
+    },
+    image5: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue : null
+    },
     active: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

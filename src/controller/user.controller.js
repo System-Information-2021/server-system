@@ -176,7 +176,7 @@ const register = async (req, res, next) => {
 };
 
 const authentication = async (req, res) => {
-   
+
     let { email, password } = req.body;
     if (!email || !password) {
         return res.json({
@@ -292,9 +292,157 @@ const getUserByToken = async (req, res) => {
 }
 
 
+const changePassword = async (req, res) => {
+    try {
+        const { id } = req.params
+        const {
+            email,
+            password,
+            re_password
+        } = req.body
+
+        let isEmpty = email.trim()
+
+        if(email.length == 0 || isEmpty == 0) {
+            return res.json({
+                code : 400, 
+                status : 'Bad Request',
+                message: 'Must provide the email or the email field must not be empty'
+            })
+        }
+
+        if (email && !ValidateEmail(email)) {
+            return res.json({
+                code: 400,
+                status: 'Bad Request',
+                message: 'Wrong email format'
+            })
+        }
+
+        let isEmptyPass = password.trim()
+        let isEmptyReqass = re_password.trim()
+
+        if(password.length != 0 && isEmptyPass != 0 && re_password.length != 0 && isEmptyReqass != 0) {
+            let user = await User.findByPk(id)
+            let isNotChange = await bcrypt.compare(password, user.password)
+
+            if(isNotChange) {
+                return res.json({
+                    code : 200,
+                    status : 'OK',
+                    message : "Please entering a new password"
+                })
+            }
+
+            if (password === re_password) {
+                let newHash = await bcrypt.hash(re_password, 8)
+    
+                await user.update({
+                    email : email,
+                    password: newHash
+                })
+                return res.json({
+                    code: 200,
+                    status: 'OK',
+                    message: 'Change successfully'
+                })
+            } else {
+                return res.json({
+                    code: 400,
+                    status: 'Bad Request',
+                    message: 'Re-enter the password is not match'
+                })
+            }
+    
+        } else {
+            return res.json({
+                code : 400,
+                status : 'Bad Request',
+                message : 'Fill both of password and re-enter password fields'
+            })
+        }
+
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code : 500,
+            status : 'Internal Error',
+            message : 'Something went wrong'
+        })
+    }
+}
+
+const updateUser = async (req,res) => {
+    try {
+        const {
+            firstname,
+            lastname,
+            company,
+            address,
+            city,
+            comment,
+            mobile_number
+        } = req.body
+
+        const { id } = req.params
+        let user = await User.findByPk(id)
+
+        if(firstname !== user.firstname || 
+            lastname !== user.lastname || 
+            mobile_number !== user.mobile_number || 
+            company !== user.company || 
+            address !== user.address || 
+            city !== user.city || 
+            comment !== user.comment) {
+            
+            if(!ValidatePhone(mobile_number)) {
+                return res.json({
+                    code : 400, status : 'Bad Request', message : 'The number phone does not exist'
+                })
+            }
+
+            if(address !== '' && !city) {
+                return res.json({
+                    code : 400, status : 'Bad Request', message : 'Must provide the city along with the address'
+                })
+            }
+
+            await user.update({
+                firstname : firstname,
+                lastname : lastname,
+                company : company,
+                address : address,
+                city : city,
+                comment : comment,
+                mobile_number : mobile_number
+            })
+            return res.json({
+                code : 200,
+                status : 'OK',
+                message : 'Update Successfully'
+            })
+        } else {
+            return res.json({
+                code : 200,
+                status : 'OK',
+                message : 'Nothing has changed'
+            })
+        }
+    } catch (err) {
+        console.log(err) 
+        return res.json({
+            code : 500,
+            status : 'Internal Error',
+            message : 'Something went wrong'
+        })
+    }
+}
+
 module.exports = {
     getAllUsers,
     authentication,
     register,
-    getUserByToken
+    getUserByToken,
+    changePassword,
+    updateUser
 }

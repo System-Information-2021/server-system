@@ -50,7 +50,7 @@ const addProduct = async (req, res) => {
                     files[index] = file.filename
                     types[index] = file.mimetype
                 })
-                const [image1, image2, image3] = files
+                const [image1, image2, image3, image4, image5] = files
                 const [ex1, mimetype1] = types[0].split('/', 2)
                 if (image1 !== null && extensionArr.includes(mimetype1)) {
                     await cloudinary.v2.uploader.upload(req.files[0].path, { tags: product.name }, (err, result) => {
@@ -77,6 +77,24 @@ const addProduct = async (req, res) => {
                             console.log(err)
                         }
                         product.image3 = result.url;
+                    })
+                }
+                const [ex4, mimetype4] = types[3].split('/', 2)
+                if (image4 !== null && extensionArr.includes(mimetype4)) {
+                    await cloudinary.v2.uploader.upload(req.files[3].path, { tags: product.name }, (err, result) => {
+                        if (err) {
+                            console.log(err)
+                        }
+                        product.image4 = result.url;
+                    })
+                }
+                const [ex5, mimetype5] = types[4].split('/', 2)
+                if (image5 !== null && extensionArr.includes(mimetype5)) {
+                    await cloudinary.v2.uploader.upload(req.files[4].path, { tags: product.name }, (err, result) => {
+                        if (err) {
+                            console.log(err)
+                        }
+                        product.image5 = result.url;
                     })
                 }
 
@@ -243,44 +261,42 @@ const updateProductInfo = async (req, res) => {
 
 const getAllProduct = async (req, res) => {
     try {
-        const { page } = req.query
-        const { count } = await Product.findAndCountAll();
+        const { page , key } = req.query
+        const data = await Product.findAll({
+            include : ['category', 'brand']
+        });
+        let count = data.length
+        
         let listProduct = []
-        let data;
-        if (count <= 7) {
-            data = await Product.findAll({
-                limit: 7,
-                offset: 0
-            })
-            for (var i = 0; i < data.length; i++) {
-                let category = await data[i].getCategory()
-                let brand = await data[i].getBrand()
-                data[i].id_brand = data[i].id_category = undefined
-                var plain = await data[i].get({ plain: true })
-                plain['category'] = await category.get({ plain: true })
-                plain['brand'] = await brand.get({ plain: true })
-                listProduct.push(plain)
-            }
-        } else {
-            console.log(count % 7, count - page * 7)
-            data = await Product.findAll({
-                limit: ((count - page * 7) >= 0) ? 7 : count % 7,
-                offset: ((count - page * 7) > 0) ? count - page * 7 : 0
-            })
 
-            for (var i = 0; i < data.length; i++) {
-                let category = await data[i].getCategory()
-                let brand = await data[i].getBrand()
-                data[i].id_brand = data[i].id_category = undefined
-                var plain = await data[i].get({ plain: true })
-                plain['category'] = await category.get({ plain: true })
-                plain['brand'] = await brand.get({ plain: true })
-                listProduct.push(plain)
-            }
+        for (var i = 0; i < data.length; i++) {
+            var plain = await data[i].get({ plain: true })
+            plain['category'] = await data[i].getCategory()
+            plain['brand'] = await data[i].getBrand()
+            delete plain['id_category'];
+            delete plain['id_brand'];
+            listProduct.push(plain)
         }
+
+        if(key) {
+            listProduct = listProduct.filter(product => {
+                return product.name.toLowerCase().search(key.toLowerCase()) !== -1
+            })
+        }
+
+        if(page) {
+            const count = listProduct.length
+            let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
+            let numberProduct = ((count - page * 7) >= 0) ? 7 : count % 7
+            listProduct = listProduct.slice(offset, offset + numberProduct)
+        }
+
+
         return res.json({
             code: 200,
             status: 'OK',
+            queryWord : (key) ? key : '',
+            totalMatch : (key) ? listProduct.length : 'No search action',
             totalPage: Math.ceil(count / 7),
             data: listProduct.reverse()
         })
@@ -356,8 +372,9 @@ const getAllProductForCustomer = async (req, res) => {
             var plain = await data[i].get({ plain: true })
             plain['category'] = await data[i].getCategory()
             plain['brand'] = await data[i].getBrand()
+            delete plain['id_category'];
+            delete plain['id_brand'];
             listProduct.push(plain)
-            data[i].id_brand = data[i].id_category = undefined
         }
         return res.json({
             code: 200,
@@ -583,12 +600,16 @@ const rankProduct = async (req, res) => {
             return product['review'].length !== 0
         })
 
-        let scoreProduct = rating(listProduct)
+        let { rankedItems } = rating(listProduct)
+
+        rankedItems.forEach(product => {
+            delete product.item['review'];
+        })
 
         return res.json({
             code: 200,
             status: 'OK',
-            data: scoreProduct.rankedItems.slice(0,4)
+            data: rankedItems.slice(0,4)
         })
 
     } catch (err) {
@@ -604,7 +625,9 @@ const rankProduct = async (req, res) => {
 const reviewProduct = async (req, res) => {
     try {
         const id_product = req.query.id
-        const product = await Product.findByPk(id_product)
+        const product = await Product.findByPk(id_product, {
+            include : ['category', 'brand']
+        })
 
         if (product) {
             var rankProduct = await Rank.findByPk(product.id_rank)
