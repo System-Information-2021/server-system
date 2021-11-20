@@ -20,12 +20,15 @@ const brandRoute = require('./src/route/brands.route')
 const productRoute = require('./src/route/products.route')
 const customerRoute = require('./src/route/customer.route')
 const cartRoute = require('./src/route/cart.route')
+const reportRoute = require('./src/route/report.route')
 
 // Use middleware 
 app.use(bodyParser.json()) // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
-
+app.get('/', (req, res) => {
+  res.json("Welcom to server side")
+})
 app.use('/', serviceRoute)
 
 app.use('/user', authorization, userRoute)
@@ -39,6 +42,8 @@ app.use('/product', authorization, productRoute)
 app.use('/customer', customerRoute)
 
 app.use('/cart', authorization, cartRoute);
+
+app.use('/report',reportRoute)
 
 app.listen(process.env.PORT || 3000, async () => {
   console.log(`Server is listening at http://localhost:${process.env.PORT}`)

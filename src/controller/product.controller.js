@@ -265,7 +265,7 @@ const getAllProduct = async (req, res) => {
         const data = await Product.findAll({
             include : ['category', 'brand']
         });
-        let count = data.length
+        var count = data.length
         
         let listProduct = []
 
@@ -279,13 +279,14 @@ const getAllProduct = async (req, res) => {
         }
 
         if(key) {
+            let clearKey = key.trim()
             listProduct = listProduct.filter(product => {
-                return product.name.toLowerCase().search(key.toLowerCase()) !== -1
+                return product.name.toLowerCase().search(clearKey.toLowerCase()) !== -1
             })
         }
 
         if(page) {
-            const count = listProduct.length
+            count = listProduct.length
             let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
             let numberProduct = ((count - page * 7) >= 0) ? 7 : count % 7
             listProduct = listProduct.slice(offset, offset + numberProduct)
@@ -297,7 +298,7 @@ const getAllProduct = async (req, res) => {
             status: 'OK',
             queryWord : (key) ? key : '',
             totalMatch : (key) ? listProduct.length : 'No search action',
-            totalPage: Math.ceil(count / 7),
+            totalPage:  (count) ? Math.ceil(count / 7) : 0,
             data: listProduct.reverse()
         })
     } catch (err) {
@@ -402,8 +403,9 @@ const searchProduct = async (req, res) => {
             include: ['category', 'brand']
         })
 
+        let clearKey = searchKey.trim()
         data = data.filter(product => {
-            return product.name.toLowerCase().search(searchKey.toLowerCase()) !== -1
+            return product.name.toLowerCase().search(clearKey.toLowerCase()) !== -1
         })
 
         let listProduct = []
