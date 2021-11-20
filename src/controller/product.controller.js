@@ -262,9 +262,7 @@ const updateProductInfo = async (req, res) => {
 const getAllProduct = async (req, res) => {
     try {
         const { page , key } = req.query
-        const data = await Product.findAll({
-            include : ['category', 'brand']
-        });
+        const data = await Product.findAll();
         var count = data.length
         
         let listProduct = []
