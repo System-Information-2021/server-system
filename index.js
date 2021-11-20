@@ -26,7 +26,9 @@ const reportRoute = require('./src/route/report.route')
 app.use(bodyParser.json()) // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
-
+app.get('/', (req, res) => {
+  res.json("Welcom to server side")
+})
 app.use('/', serviceRoute)
 
 app.use('/user', authorization, userRoute)
