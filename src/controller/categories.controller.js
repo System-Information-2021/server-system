@@ -111,16 +111,30 @@ const deleteCategory = async (req, res) => {
     const existCategory = await Category.findByPk(id_category)
 
     if (existCategory !== null) {
-        const result = await Category.destroy({
-            where: {
-                id: id_category
-            }
-        })
-        return res.json({
-            code: 200,
-            status: 'Successfully'
-        })
-    } else if (existCategory === null) {
+        let productCategory = await Product.findAll({ where: { id_category: existCategory.id } })
+
+        if (productCategory.length > 0) {
+            return res.json({
+                code: 400,
+                status: 'Bad Request',
+                message: "Can't delete because there are some product have contraint on this category"
+            })
+        } else {
+            let categoryDelete = existCategory.name
+            await Category.destroy({
+                where: {
+                    id: id_category
+                }
+            })
+
+            return res.json({
+                code: 200,
+                status: 'Successfully',
+                message: `${categoryDelete} is deleted`
+            })
+        }
+
+    } else if (existBrand === null) {
         return res.json({
             code: 400,
             status: 'Not found',
@@ -131,29 +145,37 @@ const deleteCategory = async (req, res) => {
 
 const getAllCategories = async (req, res) => {
     try {
-        if (req.query.page) {
-            const page = req.query.page
-            let { count } = await Category.findAndCountAll();
-            let listCategory;
+        const { page, key } = req.query
+        let data = await Category.findAll()
+        let count = data.length
+        let listCategory = []
 
-            if (count <= 7) {
-                listCategory = await Category.findAndCountAll({
-                    limit: 7,
-                    offset: 0
-                })
-            } else {
-                listCategory = await Category.findAndCountAll({
-                    limit: ((count - page * 7) > 0) ? 7 : count % 7,
-                    offset: ((count - page * 7) > 0) ? count - page * 7 : 0
-                })
-            }
-            return res.json({
-                code: 200,
-                status: 'OK',
-                totalPage: Math.ceil(listCategory.count / 7),
-                data: listCategory.rows.reverse()
+        for(let i=0; i<count ; i++) {
+            listCategory.push(await data[i].get({plain : true}))
+        }
+
+
+        if(key) {
+            var clearKey = key.trim()
+            listCategory = listCategory.filter(category => {
+                return category.name.toLowerCase().search(clearKey.toLowerCase()) !== -1
             })
         }
+
+        if(page) {
+            count = listCategory.length
+            let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
+            let numberProduct = ((count - page * 7) >= 0) ? 7 : count % 7
+            listCategory = listCategory.slice(offset, offset + numberProduct)
+        }
+
+        return res.json({
+            code: 200,
+            status: 'OK',
+            totalPage: (page) ? Math.ceil(count / 7) : 1,
+            queryWord : (key) ? clearKey : '',
+            data: listCategory.reverse()
+        })
     } catch (err) {
         return res.json({
             code: 500,

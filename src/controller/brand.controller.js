@@ -61,7 +61,7 @@ const updateBrand = async (req, res) => {
     const id_brand = req.params.id_brand
 
     const existBrand = await Brand.findByPk(id_brand)
-    
+
 
     if (existBrand !== null) {
         if (!req.body.name_brand) {
@@ -74,106 +74,116 @@ const updateBrand = async (req, res) => {
 
         let name_brand = req.body.name_brand
         const checkBrand = await Brand.findOne({
-            where : {
-                name : name_brand
+            where: {
+                name: name_brand
             }
         })
-        if(checkBrand === null) {
+        if (checkBrand === null) {
             name_brand = name_brand.charAt(0).toUpperCase() + name_brand.slice(1);
             const newBrand = await Brand.update({
                 name: name_brand,
             },
                 {
-                    where: { id : id_brand }
+                    where: { id: id_brand }
                 }
             )
             return res.json({
                 code: 200,
-                status : 'Successfully',
+                status: 'Successfully',
             })
-        } else if(checkBrand !== null) {
+        } else if (checkBrand !== null) {
             return res.json({
-                code : 400, 
-                status : 'Existed',
-                message : 'Brand does exist'
+                code: 400,
+                status: 'Existed',
+                message: 'Brand does exist'
             })
         }
-    } else if(existBrand === null) {
+    } else if (existBrand === null) {
         return res.json({
-            code : 400,
-            status : 'Not Found',
-            message : 'Brand id is not found'
+            code: 400,
+            status: 'Not Found',
+            message: 'Brand id is not found'
         })
     }
 }
 
-const deleteBrand = async (req,res) => {
+const deleteBrand = async (req, res) => {
     const id_brand = req.params.id_brand
     const existBrand = await Brand.findByPk(id_brand)
 
-    if(existBrand !== null) {
-        let productBrand = await Product.findAll({ where : { id_brand : existBrand.id } }) 
+    if (existBrand !== null) {
+        let productBrand = await Product.findAll({ where: { id_brand: existBrand.id } })
 
-        if(productBrand.length > 0) {
+        if (productBrand.length > 0) {
             return res.json({
-                code : 400,
-                status : 'Bad Request',
-                message : "Can't delete because there are some product have contraint on this brand"
+                code: 400,
+                status: 'Bad Request',
+                message: "Can't delete because there are some product have contraint on this brand"
             })
         } else {
             let brandDelete = existBrand.name
             await Brand.destroy({
-                where : {
-                    id : id_brand
+                where: {
+                    id: id_brand
                 }
             })
 
             return res.json({
-                code : 200,
-                status : 'Successfully',
-                message : `${brandDelete} is deleted`
+                code: 200,
+                status: 'Successfully',
+                message: `${brandDelete} is deleted`
             })
         }
 
-    } else if(existBrand === null) {
+    } else if (existBrand === null) {
         return res.json({
-            code : 400,
-            status : 'Not found',
-            message : 'Brand id is not found'
+            code: 400,
+            status: 'Not found',
+            message: 'Brand id is not found'
         })
     }
 }
 
-const getAllBrand = async (req,res) => {
+const getAllBrand = async (req, res) => {
     try {
-        if (req.query.page) {
-            const page = req.query.page
-            let { count } = await Brand.findAndCountAll()
-            let listBrand;
-            
-            if(count <= 7) {
-                listBrand = await Brand.findAndCountAll({
-                    limit: 7,
-                    offset : 0
-                })
-            } else {
-                listBrand = await Brand.findAndCountAll({
-                    limit: ((count - page*7) > 0) ? 7 : count%7,
-                    offset: ((count - page*7) > 0) ? count - page*7 : 0
-                })
-            }
-            return res.json({
-                code: 200,
-                status: 'OK',
-                totalPage : Math.ceil(listBrand.count/7),
-                data: listBrand.rows.reverse()
+        const { page, key } = req.query
+        let data = await Brand.findAll()
+        let count = data.length
+        let listBrand = []
+
+        for(let i=0; i<count ; i++) {
+            listBrand.push(await data[i].get({plain : true}))
+        }
+
+
+        if(key) {
+            var clearKey = key.trim()
+            listBrand = listBrand.filter(brand => {
+                return brand.name.toLowerCase().search(clearKey.toLowerCase()) !== -1
             })
         }
-    } catch (err) {
+
+        if(page) {
+            count = listBrand.length
+            let offset = ((count - page * 7) > 0) ? count - page * 7 : 0
+            let numberBrand = ((count - page * 7) >= 0) ? 7 : count % 7
+            listBrand = listBrand.slice(offset, offset + numberBrand)
+        }
+
         return res.json({
-            code : 500,
-            status : 'Interal Error',
-            message : 'Something went wrong'
+            code: 200,
+            status: 'OK',
+            totalPage: (page) ? Math.ceil(count / 7) : 1,
+            queryWord : (key) ? clearKey : '',
+            data: listBrand.reverse()
+        })
+
+    } catch (err) {
+        console.log(err)
+        return res.json({
+            code: 500,
+            status: 'Interal Error',
+            message: 'Something went wrong'
         })
     }
 }
@@ -198,7 +208,7 @@ const getAllProductByBrand = async (req, res) => {
                 })
             } else {
                 brand = await Brand.findAndCountAll({
-                    where: { id: matchBrand.id},
+                    where: { id: matchBrand.id },
                     include: 'products'
                 }, {
                     size: ((count - page * 7) > 0) ? 7 : count % 7,
@@ -208,7 +218,7 @@ const getAllProductByBrand = async (req, res) => {
             let [listProduct] = brand.rows
 
             await listProduct.products.reverse()
-            
+
             return res.json({
                 code: 200,
                 status: 'OK',
@@ -234,16 +244,16 @@ const getAllProductByBrand = async (req, res) => {
 const selectBrandOption = async (req, res) => {
     try {
         return res.json({
-            code : 200,
-            status : 'OK',
-            data : await Brand.findAll()
+            code: 200,
+            status: 'OK',
+            data: await Brand.findAll()
         })
     } catch (err) {
         console.log(err)
         return res.json({
-            code : 500,
-            status : 'Interal Error',
-            message : 'Something went wrong'
+            code: 500,
+            status: 'Interal Error',
+            message: 'Something went wrong'
         })
     }
 }
