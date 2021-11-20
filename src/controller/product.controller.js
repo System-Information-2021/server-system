@@ -298,7 +298,7 @@ const getAllProduct = async (req, res) => {
             status: 'OK',
             queryWord : (key) ? key : '',
             totalMatch : (key) ? listProduct.length : 'No search action',
-            totalPage:  (count) ? Math.ceil(count / 7) : 0,
+            totalPage:  (page) ? Math.ceil(count / 7) : 0,
             data: listProduct.reverse()
         })
     } catch (err) {
