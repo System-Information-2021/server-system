@@ -198,7 +198,8 @@ const updateStatus = async (req, res) => {
 
 const filterOrder = async (req, res) => {
     try {
-        const { page } = req.query
+        const search = req.query.email
+        const { page } = req.query.page
         let st = parseInt(req.params.status)
         let status;
         switch(st){
@@ -219,7 +220,15 @@ const filterOrder = async (req, res) => {
         if(st == 6){
              order = await Order.findAll();
         }
-
+        clearspace = search.trim()
+        
+        order = order.filter(email => {
+            return email.email.toLowerCase().search(clearspace.toLowerCase()) !== -1
+        })
+        console.log(search)
+        console.log(clearspace)
+        console.log('list')
+        console.log(order.length)
         let listOrder = [];
         for(let i= 0 ; i<order.length; i++){
             let plain = await order[i].get({ plain : true});
