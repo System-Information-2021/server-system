@@ -68,7 +68,7 @@ const order = db.define('tbl_orders', {
           }
     },
     note: {
-        type : DataTypes.STRING,
+        type : DataTypes.TEXT,
         allowNull : true
     },
 
