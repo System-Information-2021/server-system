@@ -69,7 +69,7 @@ const register = async (req, res, next) => {
         res.json({
             status: 'Bad Request',
             code: 400,
-            message: 'Please fill all fields'
+            message: 'Please fill all input fields'
         })
     } else {
         var error = []
@@ -82,7 +82,7 @@ const register = async (req, res, next) => {
         if (userMatch == null) {
             // Validate re-password of end-user
             if (!re_password) {
-                error.push('Enter the re-password')
+                error.push('Enter the repeat password input')
             } else if (re_password !== password) {
                 error.push('Password does not match')
             }
@@ -100,7 +100,7 @@ const register = async (req, res, next) => {
             if (mobile_number) {
                 var check_phone = ValidatePhone(mobile_number);
                 if (!check_phone) {
-                    error.push('Enter phone again')
+                    error.push('Enter number phone again')
                 } else {
                     user.mobile_number = mobile_number;
                 }
@@ -142,7 +142,7 @@ const register = async (req, res, next) => {
                         res.json({
                             status: 'Created',
                             code: 200,
-                            message: 'Successully'
+                            message: 'Account create successully'
 
                         })
                     }
@@ -182,7 +182,7 @@ const authentication = async (req, res) => {
         return res.json({
             status: 'Bad Resquest',
             code: 400,
-            message: 'Please fill all fields'
+            message: 'Please fill all input fields'
         })
     }
     // check email exist
@@ -328,8 +328,8 @@ const changePassword = async (req, res) => {
 
             if(isNotChange) {
                 return res.json({
-                    code : 200,
-                    status : 'OK',
+                    code : 400,
+                    status : 'Bad Request',
                     message : "Please entering a new password"
                 })
             }
@@ -358,7 +358,7 @@ const changePassword = async (req, res) => {
             return res.json({
                 code : 400,
                 status : 'Bad Request',
-                message : 'Fill both of password and re-enter password fields'
+                message : 'Fill both of password and repeat password fields'
             })
         }
 

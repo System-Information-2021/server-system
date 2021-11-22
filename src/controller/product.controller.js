@@ -262,9 +262,7 @@ const updateProductInfo = async (req, res) => {
 const getAllProduct = async (req, res) => {
     try {
         const { page , key } = req.query
-        const data = await Product.findAll({
-            include : ['category', 'brand']
-        });
+        const data = await Product.findAll();
         var count = data.length
         
         let listProduct = []
@@ -298,7 +296,7 @@ const getAllProduct = async (req, res) => {
             status: 'OK',
             queryWord : (key) ? key : '',
             totalMatch : (key) ? listProduct.length : 'No search action',
-            totalPage:  (count) ? Math.ceil(count / 7) : 0,
+            totalPage:  (page) ? Math.ceil(count / 7) : 0,
             data: listProduct.reverse()
         })
     } catch (err) {
@@ -513,22 +511,19 @@ const getNewRelease = async (req, res) => {
     try {
         let data = await Product.findAll({
             where: { active: true },
-            include: ['category', 'brand']
-        })
-
-        const offset = data.length - 5
-
-        data = data.slice(offset, data.length)
-
-        data.forEach(product => {
-            product.id_brand = product.id_category = undefined
+            order : [
+                ['createdAt', 'DESC'],
+            ],
+            include : ['category','brand'],
+            offset : 0,
+            limit : 10
         })
 
         return res.json({
             code: 200,
             status: 'OK',
-            totalNewRelease: data.length,
-            data: data.reverse()
+            totalNewRelease: (data.length > 0) ? data.length : 0,
+            data: data
         })
     } catch (err) {
         console.log(err)
