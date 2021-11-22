@@ -131,6 +131,22 @@ const updateStatus = async (req, res) => {
             case 5: status = "cancel"; break;
         }
         const existOrder = await Order.findByPk(id)
+        //check status
+        if(existOrder.status === "cancel"){
+            return res.json({
+                code: 400,
+                status: 'Fail',
+                message: 'This order had been cancelled'
+            })
+        }
+        //check status
+        if(existOrder.status === status){
+            return res.json({
+                code: 400,
+                status: 'Fail',
+                message: 'Can not change'
+            })
+        }
         if (existOrder !== null) {
             if(st=== 5){
                 await Order.update({
@@ -424,7 +440,16 @@ const getOrderbyUser = async(req,res)=>{
 
 const deleteOrder = async(req, res )=>{
     try{
+
         id = req.params.id;
+       const order= await Order.findByPk(id);
+        if(order.status === "pending" ||order.status === "received"||order.status === "delivering"||order.status === "delivered" ){
+            return res.json({
+                code: 400,
+                status: 'Fail to delete',
+                message: 'This order can not delete'
+            })
+        }
         await Order_detail.destroy({
             where: {
                 id_order: id
