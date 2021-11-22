@@ -511,22 +511,19 @@ const getNewRelease = async (req, res) => {
     try {
         let data = await Product.findAll({
             where: { active: true },
-            include: ['category', 'brand']
-        })
-
-        const offset = data.length - 5
-
-        data = data.slice(offset, data.length)
-
-        data.forEach(product => {
-            product.id_brand = product.id_category = undefined
+            order : [
+                ['createdAt', 'DESC'],
+            ],
+            include : ['category','brand'],
+            offset : 0,
+            limit : 10
         })
 
         return res.json({
             code: 200,
             status: 'OK',
-            totalNewRelease: data.length,
-            data: data.reverse()
+            totalNewRelease: (data.length > 0) ? data.length : 0,
+            data: data
         })
     } catch (err) {
         console.log(err)
