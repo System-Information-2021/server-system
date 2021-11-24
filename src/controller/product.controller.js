@@ -606,7 +606,7 @@ const rankProduct = async (req, res) => {
         return res.json({
             code: 200,
             status: 'OK',
-            data: rankedItems.slice(0,4)
+            data: rankedItems.slice(0,10)
         })
 
     } catch (err) {
