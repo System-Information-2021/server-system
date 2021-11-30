@@ -88,13 +88,13 @@ const Product = db.define('tbl_products', {
 Brand.hasMany(Product, { foreignKey: 'id_brand', as: 'products' })
 Product.belongsTo(Brand, { foreignKey: 'id_brand', as: 'brand' })
 
-// Rank.hasOne(Product, {foreignKey : 'id_rank', as : 'product'})
-// Product.belongsTo(Rank, {foreignKey : 'id_rank', as : 'rank'})
+Rank.hasOne(Product, {foreignKey : 'id_rank', as : 'product'})
+Product.belongsTo(Rank, {foreignKey : 'id_rank', as : 'rank'})
 
 Category.hasMany(Product, { foreignKey: 'id_category', as: 'products' })
 Product.belongsTo(Category, { foreignKey: 'id_category', as: 'category' })
 
-// Product.sync({alter : true})
+Product.sync({alter : true})
 
 module.exports = Product;
 

@@ -47,6 +47,6 @@ const Rank = db.define('tbl_ranks', {
     }
 })
 
-// Rank.sync({alter : true})
+Rank.sync({alter : true})
 
 module.exports = Rank;
