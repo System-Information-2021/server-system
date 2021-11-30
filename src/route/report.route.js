@@ -4,7 +4,8 @@ const controller = require('../controller/report.controller')
 
 const router = express.Router()
 
-router.get('/revenue', controller.reportRevenue);
-router.get('/product', controller.reportProduct)
+router.get('/revenue/:id', controller.reportRevenue);
+router.get('/product', controller.reportProduct);
+router.get('/order',controller.reportOrder);
 
 module.exports = router;
