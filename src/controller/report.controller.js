@@ -10,7 +10,8 @@ const reportRevenue = async(req,res)=>{
     console.log(id)
     let string;
     if (id == 1){
-         string = `SELECT SUM(total_price),date_trunc('month', "createdAt") FROM tbl_orders where status ='delivered' GROUP by date_trunc('month', "createdAt") ORDER BY date_trunc('month', "createdAt")`;
+         string = `SELECT SUM(total_price),extract (month from( date_trunc('month', "createdAt"))) FROM tbl_orders where status ='delivered' 
+         GROUP by date_trunc('month', "createdAt") ORDER BY date_trunc('month', "createdAt")`;
     } else{
          string = `SELECT SUM(total_price),date_trunc('day', "createdAt") FROM tbl_orders where status ='delivered' GROUP by date_trunc('day', "createdAt") ORDER BY date_trunc('day', "createdAt")`;
     }
@@ -25,7 +26,6 @@ const reportRevenue = async(req,res)=>{
         data: report.reverse(),
     })
 }
-
 const reportProduct  =async(req,res)=>{
     let string = `select sum( tod.quantity), tp."name" from tbl_orders too , tbl_orders_details tod , tbl_products tp where tod.id_product  =tp.id_product and too.id_order= tod.id_order and too.status='delivered' GROUP BY tp."name"`
     const report = await db.query(string ,{
@@ -38,7 +38,6 @@ const reportProduct  =async(req,res)=>{
         data: report.reverse(),
     })
 }
-
 const reportOrder  =async(req,res)=>{
    // let string = "select sum( tod.quantity), tp.\"name\" from tbl_orders_details tod , tbl_products tp where tod.id_product  =tp.id_product GROUP BY tp.\"name\""
     let string ="select  to2.\"status\", count(to2.id_order), date_trunc('month', \"createdAt\")  from tbl_orders to2   GROUP by  to2.\"status\", date_trunc('month', \"createdAt\") ORDER BY date_trunc('month', \"createdAt\")"
@@ -52,7 +51,6 @@ const reportOrder  =async(req,res)=>{
         data: report.reverse(),
     })
 }
-
 module.exports= {
     reportOrder,
     reportRevenue,
